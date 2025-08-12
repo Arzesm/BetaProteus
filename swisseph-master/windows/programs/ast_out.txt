@@ -1,0 +1,60 @@
+ Planets and Asteroids 1 - 1000000 
+ --------------------------------------------
+ natal chart, apparent pos., Placidus, sort by position
+ date 1: 20.11.1994      10:51:33 UT  10:52:34 ET   jd (ET) = 2449676.953168
+error: SwissEph file 'seas_18.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00005s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00006s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00007s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00008s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00009s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00010s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00011s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00012s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00013s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00014s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00015s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00016s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00017s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00018s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00019s.se1' not found in PATH '\sweph\ephe\'
+error: SwissEph file 'se00020s.se1' not found in PATH '\sweph\ephe\'
+
+warning: SwissEph file 'sepl_18.se1' not found in PATH '\sweph\ephe\' 
+using Moshier eph.; 
+ 
+ 0 ar 00'00"   2060 Chiron
+ 0 ar 00'00"      9 9: not found
+ 0 ar 00'00"   5145 Pholus
+ 0 ar 00'00"      6 6: not found
+ 0 ar 00'00"      5 5: not found
+ 0 ar 00'00"      3 Juno
+ 0 ar 00'00"      4 Vesta
+ 0 ar 00'00"      7 7: not found
+ 0 ar 00'00"      8 8: not found
+ 0 ar 00'00"      1 Ceres
+ 0 ar 00'00"      2 Pallas
+26 ar 18'58"        House 3 Placidus
+23 ta 03'38"        Imum Coeli
+13 ge 12'54"        House 5 Placidus
+21 ge 18'07"        Moon
+ 1 cn 46'34"        House 6 Placidus
+23 cn 37'50"        Descendant
+22 le 58'00"        Mars
+29 le 29'20"        Vertex
+15 vi 15'57"        House 8 Placidus
+26 li 18'58"        House 9 Placidus
+ 2 sc 41'54"        Venus
+14 sc 42'00"        Mercury
+23 sc 03'38"        Medium Coeli
+25 sc 49'06"        Jupiter
+27 sc 53'11"        Sun
+27 sc 58'02"        Pluto
+13 sa 12'54"        House 11 Placidus
+ 1 cp 46'34"        House 12 Placidus
+21 cp 13'10"        Neptune
+23 cp 23'51"        Uranus
+23 cp 37'50"        Ascendant
+29 aq 29'20"        Antivertex
+ 5 pi 47'13"        Saturn
+15 pi 15'57"        House 2 Placidus

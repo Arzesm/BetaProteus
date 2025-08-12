@@ -1,5 +1,17 @@
-import SwissEph from 'swisseph-wasm';
-import { BirthData } from '@/components/astrology/BirthDataForm';
+// Ensure Emscripten loader can resolve WASM/data files when using local swisseph build
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+(globalThis as any).Module = (globalThis as any).Module || {};
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+(globalThis as any).Module.locateFile = (path: string, prefix: string) => {
+  if (path.startsWith('http') || path.startsWith('/') || path.startsWith('data:')) return path;
+  if (!path.endsWith('.wasm') && !path.endsWith('.data')) return `${prefix}${path}`;
+  return `/${path}`;
+};
+
+import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
+import type { BirthData } from '@/components/astrology/BirthDataForm';
 import { City } from '@/data/cities';
 
 const ZODIAC_SIGNS = [

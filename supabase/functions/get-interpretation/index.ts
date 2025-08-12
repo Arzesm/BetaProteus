@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-const OPENAI_MODEL = Deno.env.get('OPENAI_MODEL') || "gpt-4o-mini";
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY') || "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";
+const OPENAI_MODEL = Deno.env.get('OPENAI_MODEL') || "gpt-5";
 
 
 
@@ -52,7 +52,7 @@ serve(async (req) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_completion_tokens: 800,
+      max_tokens: 230,
     };
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -88,7 +88,7 @@ serve(async (req) => {
           { role: "system", content: strictSystem },
           { role: "user", content: userPrompt },
         ],
-        max_completion_tokens: 800,
+        max_tokens: 230,
       };
       const retry = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
