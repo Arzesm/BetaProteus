@@ -1,0 +1,27 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: rgb(255, 255, 255);
+}
+
+body{
+    background-color: #000000;
+    color: white;
+}
+.phase,.phase-image{
+    text-align: center;
+}
+.phase-image{
+    width: 45%;
+    height: 45%;
+    text-align: center;
+    overflow: hidden;
+}
+.phase-image img{
+    object-fit: cover;
+    object-position: center;
+}
+#phaseName{
+    font-size: 22px;
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">vibrant-pangolin-swoop</string>
+    <string name="title_activity_main">vibrant-pangolin-swoop</string>
+    <string name="package_name">com.example.vibrantpangolinswoop</string>
+    <string name="custom_url_scheme">com.example.vibrantpangolinswoop</string>
+</resources>
