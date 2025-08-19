@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,11 +12,11 @@ import {
   ArchetypeResult
 } from '@/data/archetypeTest';
 
-interface ArchetypeTestProps {
+interface ArchetypeTestNewProps {
   onComplete: (results: ArchetypeResult[]) => void;
 }
 
-export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
+export const ArchetypeTestNew: React.FC<ArchetypeTestNewProps> = ({ onComplete }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
@@ -24,30 +24,9 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [expandedArchetypes, setExpandedArchetypes] = useState<string[]>([]);
   const [forceUpdate, setForceUpdate] = useState(0);
-  
-  // Временная переменная для отладки
-  const debugInfo = `showResults: ${showResults}, results: ${results.length}, expanded: ${expandedArchetypes.join(',')}, force: ${forceUpdate}`;
-
-
 
   const totalQuestions = archetypeQuestions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
-
-  // Автоматически разворачиваем первый архетип при появлении результатов
-  useEffect(() => {
-    console.log('=== USE_EFFECT СРАБОТАЛ ===');
-    console.log('showResults:', showResults);
-    console.log('results.length:', results.length);
-    console.log('expandedArchetypes.length:', expandedArchetypes.length);
-    
-    if (showResults && results.length > 0 && expandedArchetypes.length === 0) {
-      console.log('=== USE_EFFECT: АВТОМАТИЧЕСКОЕ РАЗВОРАЧИВАНИЕ ===');
-      const topArchetype = results.sort((a, b) => b.score - a.score)[0];
-      console.log('Топ архетип для разворачивания:', topArchetype.archetype);
-      setExpandedArchetypes([topArchetype.archetype]);
-      console.log('Установили expandedArchetypes в:', [topArchetype.archetype]);
-    }
-  }, [showResults, results]); // Убрали expandedArchetypes из зависимостей
 
   const handleAnswer = (score: number) => {
     const questionId = archetypeQuestions[currentQuestion].id;
@@ -72,24 +51,15 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
   const finishTest = () => {
     const calculatedResults = calculateArchetypeResults(answers);
     
-    // Временная проверка - выводим в консоль
-    console.log('=== ПРОВЕРКА РЕЗУЛЬТАТОВ ===');
-    console.log('Все результаты:', calculatedResults);
+    // Автоматически разворачиваем первый архетип
     if (calculatedResults.length > 0) {
-      const firstResult = calculatedResults[0];
-      console.log('Первый результат:', firstResult);
-      console.log('Есть ли описание?', !!firstResult.description);
-      console.log('Длина описания:', firstResult.description?.length);
-      console.log('Первые 200 символов:', firstResult.description?.substring(0, 200));
+      const topArchetype = calculatedResults.sort((a, b) => b.score - a.score)[0];
+      setExpandedArchetypes([topArchetype.archetype]);
     }
     
-    // Устанавливаем результаты и показываем их
     setResults(calculatedResults);
     setShowResults(true);
     onComplete(calculatedResults);
-    
-    // Сбрасываем expandedArchetypes, чтобы useEffect сработал
-    setExpandedArchetypes([]);
   };
 
   const restartTest = () => {
@@ -122,37 +92,23 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
   };
 
   if (showResults) {
-    console.log('=== НАЧАЛО РЕНДЕРИНГА РЕЗУЛЬТАТОВ ===');
-    console.log('showResults:', showResults);
-    console.log('results.length:', results.length);
-    console.log('expandedArchetypes:', expandedArchetypes);
-    console.log('forceUpdate:', forceUpdate);
-    
     // Сортируем результаты по убыванию баллов
     const sortedResults = [...results].sort((a, b) => b.score - a.score);
     const topArchetypes = sortedResults.slice(0, 3);
     
     // Отладочная информация
-    console.log('=== ОТЛАДКА UI ===');
-    console.log('Отсортированные результаты:', sortedResults.map(r => ({ archetype: r.archetype, score: r.score })));
+    console.log('Состояние expandedArchetypes:', expandedArchetypes);
     console.log('Топ архетипы:', topArchetypes.map(r => r.archetype));
     console.log('Первый архетип:', topArchetypes[0]?.archetype);
-    console.log('Должен ли первый архетип быть развернут?', expandedArchetypes.includes(topArchetypes[0]?.archetype));
     console.log('Описание первого архетипа:', topArchetypes[0]?.description);
-    
-    // Принудительно обновляем, если нужно
-    if (expandedArchetypes.length > 0) {
-      console.log('=== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ===');
-      setForceUpdate(prev => prev + 1);
-    }
 
     return (
       <div className="space-y-6">
-        <Card className="border-4 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardHeader className="bg-purple-100">
-            <CardTitle className="text-3xl text-center text-purple-800 font-bold">🎭 РЕЗУЛЬТАТЫ ТЕСТА НА АРХЕТИПЫ 🎭</CardTitle>
-            <p className="text-center text-purple-600 font-semibold text-lg">
-              🌟 Ваш уникальный архетипический профиль личности 🌟
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">🎭 Результаты теста на архетипы</CardTitle>
+            <p className="text-center text-muted-foreground">
+              Ваш архетипический профиль личности
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -160,32 +116,16 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
             <div className="p-4 bg-red-100 border-2 border-red-500 rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-bold text-red-800">🚨 ОТЛАДОЧНАЯ ИНФОРМАЦИЯ</h4>
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={() => setForceUpdate(prev => prev + 1)} 
-                    size="sm" 
-                    variant="outline"
-                    className="text-red-800 border-red-500"
-                  >
-                    Обновить (Force Update: {forceUpdate})
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      console.log('=== ТЕСТОВАЯ КНОПКА ===');
-                      console.log('Текущий expandedArchetypes:', expandedArchetypes);
-                      setExpandedArchetypes(['innocent']);
-                      console.log('Установили expandedArchetypes в:', ['innocent']);
-                    }} 
-                    size="sm" 
-                    variant="outline"
-                    className="text-red-800 border-red-500"
-                  >
-                    Тест: Развернуть Невинный
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => setForceUpdate(prev => prev + 1)} 
+                  size="sm" 
+                  variant="outline"
+                  className="text-red-800 border-red-500"
+                >
+                  Обновить (Force Update: {forceUpdate})
+                </Button>
               </div>
               <div className="space-y-2 text-sm text-red-800">
-                <p><strong>Отладочная информация:</strong> {debugInfo}</p>
                 <p><strong>Количество результатов:</strong> {results.length}</p>
                 <p><strong>Состояние expandedArchetypes:</strong> [{expandedArchetypes.join(', ') || 'пусто'}]</p>
                 <p><strong>Первый архетип:</strong> {topArchetypes[0]?.archetype || 'НЕТ'}</p>
@@ -198,11 +138,9 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
             
             {/* Топ-3 архетипа с разворачивающимся описанием */}
             <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-center text-purple-800 bg-yellow-200 p-3 rounded-lg border-2 border-yellow-400">
-                🏆 ВАШИ ВЕДУЩИЕ АРХЕТИПЫ 🏆
-              </h3>
-              <p className="text-center text-lg text-purple-600 font-semibold bg-blue-100 p-2 rounded-lg border border-blue-300">
-                💡 Нажмите на любой архетип, чтобы развернуть подробное описание 💡
+              <h3 className="text-lg font-semibold text-center">🏆 Ваши ведущие архетипы</h3>
+              <p className="text-center text-sm text-muted-foreground">
+                💡 Нажмите на любой архетип, чтобы развернуть подробное описание
               </p>
               <div className="space-y-4">
                 {topArchetypes.map((result, index) => {
@@ -210,27 +148,18 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                   const IconComponent = archetypeConfig.icon;
                   
                   return (
-                    <Card key={result.archetype} className="overflow-hidden shadow-2xl border-4 border-blue-300 hover:border-purple-500 transition-all duration-300 transform hover:scale-105">
+                    <Card key={result.archetype} className="overflow-hidden">
                       <CardContent className="p-0">
                         <div 
-                          className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 bg-gradient-to-r from-blue-100 to-indigo-100"
+                          className="p-6 cursor-pointer hover:bg-muted/50 transition-colors"
                           onClick={() => {
-                            console.log('=== КЛИК ПО АРХЕТИПУ ===');
-                            console.log('Кликнули по архетипу:', result.archetype);
-                            console.log('Текущий expandedArchetypes:', expandedArchetypes);
                             const currentExpanded = expandedArchetypes.includes(result.archetype);
-                            console.log('Сейчас развернут?', currentExpanded);
                             if (currentExpanded) {
-                              const newExpanded = expandedArchetypes.filter(a => a !== result.archetype);
-                              console.log('Сворачиваем, новый массив:', newExpanded);
-                              setExpandedArchetypes(newExpanded);
+                              setExpandedArchetypes(expandedArchetypes.filter(a => a !== result.archetype));
                             } else {
-                              const newExpanded = [...expandedArchetypes, result.archetype];
-                              console.log('Разворачиваем, новый массив:', newExpanded);
-                              setExpandedArchetypes(newExpanded);
+                              setExpandedArchetypes([...expandedArchetypes, result.archetype]);
                             }
                           }}
-                          onMouseEnter={() => console.log('Мышь над архетипом:', result.archetype)}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
@@ -258,10 +187,9 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                         
                         {/* Разворачивающееся описание */}
                         {expandedArchetypes.includes(result.archetype) && (
-                          <div className="border-t-4 border-purple-400 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6 space-y-4 shadow-inner">
+                          <div className="border-t bg-muted/30 p-6 space-y-4">
                             <div className="prose prose-sm max-w-none dark:prose-invert text-foreground">
                               <div 
-                                className="bg-white p-4 rounded-lg border-2 border-purple-200 shadow-lg"
                                 dangerouslySetInnerHTML={{
                                   __html: result.description.replace(/\n/g, '<br/>')
                                 }}
@@ -324,8 +252,6 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                 })}
               </div>
             </div>
-
-
 
             <Separator />
 
@@ -433,11 +359,8 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                   </>
                 )}
               </Button>
-              <Button 
-                onClick={restartTest} 
-                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300"
-              >
-                🔄 Пройти тест заново 🔄
+              <Button onClick={restartTest} variant="outline">
+                Пройти тест заново
               </Button>
             </div>
           </CardContent>
@@ -446,6 +369,7 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
     );
   }
 
+  // Текущий вопрос
   const currentQ = archetypeQuestions[currentQuestion];
   const hasAnswer = answers[currentQ.id] !== undefined;
 
@@ -455,10 +379,10 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
         <CardHeader>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Вопрос {currentQuestion + 1} из {totalQuestions}</h2>
-              <Badge variant="secondary">
-                {archetypeTestConfig.archetypes[currentQ.archetype].name}
-              </Badge>
+              <h2 className="text-2xl font-bold">🎭 Тест на архетипы</h2>
+              <span className="text-sm text-muted-foreground">
+                Вопрос {currentQuestion + 1} из {totalQuestions}
+              </span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -472,57 +396,24 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
           </div>
 
           <div className="grid gap-3">
-            <Button
-              variant={answers[currentQ.id] === 0 ? "default" : "outline"}
-              onClick={() => handleAnswer(0)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">0 - Совсем не про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение абсолютно не соответствует моей личности
+            {[0, 1, 2, 3].map((score) => (
+              <Button
+                key={score}
+                variant={answers[currentQ.id] === score ? "default" : "outline"}
+                className="justify-start h-auto p-4"
+                onClick={() => handleAnswer(score)}
+              >
+                <div className="text-left">
+                  <div className="font-medium">{score} баллов</div>
+                  <div className="text-sm text-muted-foreground">
+                    {score === 0 && "Совсем не согласен"}
+                    {score === 1 && "Скорее не согласен"}
+                    {score === 2 && "Скорее согласен"}
+                    {score === 3 && "Полностью согласен"}
+                  </div>
                 </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 1 ? "default" : "outline"}
-              onClick={() => handleAnswer(1)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">1 - Скорее не про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение в основном не соответствует моей личности
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 2 ? "default" : "outline"}
-              onClick={() => handleAnswer(2)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">2 - Иногда про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение иногда соответствует моей личности
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 3 ? "default" : "outline"}
-              onClick={() => handleAnswer(3)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">3 - Очень похоже на меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение очень точно описывает мою личность
-                </div>
-              </div>
-            </Button>
+              </Button>
+            ))}
           </div>
 
           <div className="flex justify-between">
@@ -546,14 +437,15 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
               <Button
                 onClick={nextQuestion}
                 disabled={!hasAnswer}
+                className="bg-primary hover:bg-primary/90"
               >
-                Следующий вопрос
+                Далее
               </Button>
             )}
           </div>
 
           {!hasAnswer && (
-            <div className="text-center">
+            <div className="text-center p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
                 Пожалуйста, выберите ответ, чтобы продолжить
               </p>
