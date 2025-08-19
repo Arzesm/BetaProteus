@@ -1438,16 +1438,42 @@ export function MBTITest({ onComplete, forceResult }: { onComplete: (result: str
                       // Создаем картинку из всего результата теста
                       const resultElement = document.querySelector('[data-test-result="mbti"]');
                       if (resultElement) {
+                        // Определяем оптимальный масштаб для устройства
+                        const devicePixelRatio = window.devicePixelRatio || 1;
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        
+                        // Для мобильных устройств используем более высокий масштаб
+                        const optimalScale = isMobile ? Math.max(4, devicePixelRatio * 2) : Math.max(2, devicePixelRatio);
+                        
+                        console.log(`MBTI - Device pixel ratio: ${devicePixelRatio}, Optimal scale: ${optimalScale}, Is mobile: ${isMobile}`);
+
                         const canvas = await html2canvas(resultElement as HTMLElement, {
                           backgroundColor: '#ffffff',
-                          scale: 2,
+                          scale: optimalScale, // Оптимальный масштаб для устройства
                           useCORS: true,
                           allowTaint: true,
-                          logging: false
+                          logging: false,
+                          width: resultElement.scrollWidth,
+                          height: resultElement.scrollHeight,
+                          scrollX: 0,
+                          scrollY: 0,
+                          windowWidth: document.documentElement.offsetWidth,
+                          windowHeight: document.documentElement.offsetHeight,
+                          // Дополнительные настройки для лучшего качества
+                          removeContainer: true,
+                          foreignObjectRendering: false,
+                          imageTimeout: 15000,
+                          // Настройки для мобильных устройств
+                          ...(isMobile && {
+                            scale: Math.max(4, devicePixelRatio * 2), // Еще выше для мобильных
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff'
+                          })
                         });
 
                         const blob = await new Promise<Blob>((resolve) => {
-                          canvas.toBlob((b) => resolve(b!), 'image/png', 0.95);
+                          canvas.toBlob((b) => resolve(b!), 'image/png', 1.0); // Максимальное качество PNG
                         });
 
                         const file = new File([blob], 'mbti-result.png', { type: 'image/png' });

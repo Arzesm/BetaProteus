@@ -339,7 +339,36 @@ const PsychologyPage = () => {
     return descriptions[type] || `🔹 Общая характеристика\nВаш тип личности — ${type}. Узнайте больше о своих особенностях, пройдя тест на платформе Протей!`;
   };
 
+  // Функция для определения оптимальных настроек html2canvas
+  const getOptimalCanvasSettings = () => {
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isHighDPR = devicePixelRatio > 2; // Высокая плотность пикселей (Retina, 4K)
+    
+    // Определяем оптимальный масштаб
+    let optimalScale = 2; // Базовый масштаб
+    
+    if (isMobile) {
+      if (isHighDPR) {
+        optimalScale = Math.max(5, devicePixelRatio * 2); // Для мобильных с высоким DPR
+      } else {
+        optimalScale = Math.max(4, devicePixelRatio * 2); // Для обычных мобильных
+      }
+    } else if (isHighDPR) {
+      optimalScale = Math.max(3, devicePixelRatio * 1.5); // Для десктопов с высоким DPR
+    } else {
+      optimalScale = Math.max(2, devicePixelRatio); // Для обычных десктопов
+    }
+    
+    console.log(`Canvas settings - Device pixel ratio: ${devicePixelRatio}, Optimal scale: ${optimalScale}, Is mobile: ${isMobile}, Is high DPR: ${isHighDPR}`);
+    
+    return { optimalScale, isMobile, devicePixelRatio, isHighDPR };
+  };
+
   const createResultImage = async (testId: string, result: any) => {
+    // Объявляем переменную для временного контейнера
+    let tempContainer: HTMLDivElement | null = null;
+    
     try {
       // Находим элемент с результатом теста
       const resultElement = document.querySelector(`[data-test-result="${testId}"]`);
@@ -348,31 +377,144 @@ const PsychologyPage = () => {
         return null;
       }
 
-      // Создаем картинку из элемента
-      const canvas = await html2canvas(resultElement as HTMLElement, {
+      // Получаем оптимальные настройки
+      const { optimalScale, isMobile, devicePixelRatio, isHighDPR } = getOptimalCanvasSettings();
+
+      // Создаем временный контейнер для корректного рендеринга
+      tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '-9999px';
+      tempContainer.style.width = 'auto';
+      tempContainer.style.height = 'auto';
+      tempContainer.style.overflow = 'visible';
+      tempContainer.style.backgroundColor = '#ffffff';
+      tempContainer.style.padding = '20px';
+      tempContainer.style.borderRadius = '8px';
+      tempContainer.style.boxShadow = 'none';
+      
+      // Клонируем элемент результата
+      const clonedElement = resultElement.cloneNode(true) as HTMLElement;
+      clonedElement.style.width = 'auto';
+      clonedElement.style.height = 'auto';
+      clonedElement.style.overflow = 'visible';
+      clonedElement.style.position = 'relative';
+      clonedElement.style.transform = 'none';
+      
+      // Добавляем в временный контейнер
+      tempContainer.appendChild(clonedElement);
+      document.body.appendChild(tempContainer);
+      
+      // Небольшая задержка для полной загрузки контента
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Получаем точные размеры клонированного элемента
+      const rect = clonedElement.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(clonedElement);
+      
+      // Учитываем все отступы и границы
+      const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+      const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+      const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+      const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+      const borderTop = parseFloat(computedStyle.borderTopWidth) || 0;
+      const borderBottom = parseFloat(computedStyle.borderBottomWidth) || 0;
+      const borderLeft = parseFloat(computedStyle.borderLeftWidth) || 0;
+      const borderRight = parseFloat(computedStyle.borderRightWidth) || 0;
+      
+      // Вычисляем полные размеры с учетом отступов и границ
+      const fullWidth = rect.width + paddingLeft + paddingRight + borderLeft + borderRight;
+      const fullHeight = rect.height + paddingTop + paddingBottom + borderTop + borderBottom;
+      
+      // Принудительно обновляем layout для получения точных размеров
+      clonedElement.offsetHeight; // Trigger reflow
+      
+      // Добавляем дополнительные отступы для гарантии полного отображения
+      const extraPadding = 80; // 40px сверху и снизу для гарантии
+      const finalWidth = Math.max(fullWidth, clonedElement.scrollWidth, clonedElement.offsetWidth) + extraPadding;
+      const finalHeight = Math.max(fullHeight, clonedElement.scrollHeight, clonedElement.offsetHeight) + extraPadding;
+      
+      console.log(`Cloned element dimensions - Width: ${finalWidth}, Height: ${finalHeight}, Scroll: ${clonedElement.scrollWidth}x${clonedElement.scrollHeight}, Offset: ${clonedElement.offsetWidth}x${clonedElement.offsetHeight}, Rect: ${rect.width}x${rect.height}`);
+
+      // Создаем картинку из клонированного элемента с улучшенными настройками
+      const canvas = await html2canvas(clonedElement, {
         backgroundColor: '#ffffff',
-        scale: 2, // Увеличиваем качество
+        scale: optimalScale, // Оптимальный масштаб для устройства
         useCORS: true,
         allowTaint: true,
-        logging: false
+        logging: false,
+        // Используем вычисленные размеры
+        width: finalWidth,
+        height: finalHeight,
+        // Убираем скроллинг для корректного отображения
+        scrollX: 0,
+        scrollY: 0,
+        // Устанавливаем размеры окна равными размерам элемента
+        windowWidth: finalWidth,
+        windowHeight: finalHeight,
+        // Дополнительные настройки для лучшего качества
+        removeContainer: true,
+        foreignObjectRendering: false,
+        imageTimeout: 15000,
+        // Настройки для корректного отображения длинного контента
+        ignoreElements: (element) => {
+          // Игнорируем элементы, которые могут мешать рендерингу
+          const htmlElement = element as HTMLElement;
+          return htmlElement.style.position === 'fixed' || 
+                 htmlElement.style.position === 'sticky' ||
+                 htmlElement.classList.contains('fixed') ||
+                 htmlElement.classList.contains('sticky');
+        },
+        // Специальные настройки для высокого DPR
+        ...(isHighDPR && {
+          scale: Math.max(optimalScale, devicePixelRatio * 2),
+          imageTimeout: 20000, // Больше времени для высокого качества
+        }),
+        // Специальные настройки для мобильных устройств
+        ...(isMobile && {
+          imageTimeout: 25000, // Больше времени для мобильных
+          removeContainer: true,
+          foreignObjectRendering: false,
+        })
       });
 
-      // Конвертируем canvas в blob
-      return new Promise<Blob>((resolve) => {
+      // Конвертируем canvas в blob с максимальным качеством
+      const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => {
           if (blob) {
             resolve(blob);
           }
-        }, 'image/png', 0.95);
+        }, 'image/png', 1.0); // Максимальное качество PNG
       });
+      
+      // Очищаем временный контейнер
+      if (tempContainer && tempContainer.parentNode) {
+        tempContainer.parentNode.removeChild(tempContainer);
+      }
+      
+      return blob;
     } catch (error) {
       console.error('Error creating image:', error);
+      
+      // Очищаем временный контейнер в случае ошибки
+      if (tempContainer && tempContainer.parentNode) {
+        tempContainer.parentNode.removeChild(tempContainer);
+      }
+      
       return null;
     }
   };
 
   const handleShareResult = async (testId: string, result: any) => {
     try {
+      // Показываем индикатор загрузки
+      const shareButton = document.querySelector(`[data-share-button="${testId}"]`);
+      if (shareButton) {
+        const originalText = shareButton.textContent;
+        shareButton.textContent = '🔄 Создаем изображение...';
+        shareButton.setAttribute('disabled', 'true');
+      }
+
       // Создаем картинку из результата
       const imageBlob = await createResultImage(testId, result);
       
@@ -427,6 +569,13 @@ const PsychologyPage = () => {
       } else {
         await navigator.clipboard.writeText(shareText);
         alert('Результат скопирован в буфер обмена!');
+      }
+    } finally {
+      // Восстанавливаем кнопку
+      const shareButton = document.querySelector(`[data-share-button="${testId}"]`);
+      if (shareButton) {
+        shareButton.textContent = '📤 Поделиться';
+        shareButton.removeAttribute('disabled');
       }
     }
   };
@@ -957,6 +1106,7 @@ const PsychologyPage = () => {
                             <Button 
                               variant="default" 
                               onClick={() => handleShareResult(test.id, testResults[test.id])}
+                              data-share-button={test.id}
                               className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
                             >
                               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
