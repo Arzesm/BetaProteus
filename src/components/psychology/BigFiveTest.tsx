@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  bigFiveQuestions, 
-  bigFiveTestConfig, 
-  calculateBigFiveResults, 
-  BigFiveResult 
+import {
+  bigFiveQuestions,
+  bigFiveTestConfig,
+  calculateBigFiveResults,
+  BigFiveResult
 } from '@/data/bigFiveTest';
 
 interface BigFiveTestProps {
@@ -16,12 +16,75 @@ interface BigFiveTestProps {
 }
 
 export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
+  // Все хуки в начале компонента
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<BigFiveResult[]>([]);
 
-  // Функции для получения описаний разных уровней
+  // Вычисляемые значения
+  const totalQuestions = bigFiveQuestions.length;
+  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const currentQ = bigFiveQuestions[currentQuestion];
+  const hasAnswer = answers[currentQ.id] !== undefined;
+
+  // Функции
+  const handleAnswer = (score: number) => {
+    const questionId = bigFiveQuestions[currentQuestion].id;
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: score
+    }));
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < totalQuestions - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    }
+  };
+
+  const previousQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
+  const finishTest = () => {
+    const calculatedResults = calculateBigFiveResults(answers);
+    setResults(calculatedResults);
+    setShowResults(true);
+    onComplete(calculatedResults);
+  };
+
+  const restartTest = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowResults(false);
+    setResults([]);
+  };
+
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case 'very_low': return 'bg-red-100 text-red-800';
+      case 'low': return 'bg-orange-100 text-orange-800';
+      case 'average': return 'bg-yellow-100 text-yellow-800';
+      case 'high': return 'bg-green-100 text-green-800';
+      case 'very_high': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getLevelText = (level: string) => {
+    switch (level) {
+      case 'very_low': return 'Очень низкий';
+      case 'low': return 'Низкий';
+      case 'average': return 'Средний';
+      case 'high': return 'Высокий';
+      case 'very_high': return 'Очень высокий';
+      default: return 'Неизвестно';
+    }
+  };
+
   const getHighLevelDescription = (factor: string) => {
     switch (factor) {
       case 'openness':
@@ -73,289 +136,223 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
     }
   };
 
-  const totalQuestions = bigFiveQuestions.length;
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100;
-
-  const handleAnswer = (score: number) => {
-    const questionId = bigFiveQuestions[currentQuestion].id;
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: score
-    }));
-  };
-
-  const nextQuestion = () => {
-    if (currentQuestion < totalQuestions - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    }
-  };
-
-  const previousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
-  };
-
-  const finishTest = () => {
-    const calculatedResults = calculateBigFiveResults(answers);
-    console.log('Big Five Results:', calculatedResults);
-    console.log('Result levels:', calculatedResults.map(r => ({ factor: r.factor, level: r.level })));
-    setResults(calculatedResults);
-    setShowResults(true);
-    onComplete(calculatedResults);
-  };
-
-  const restartTest = () => {
-    setCurrentQuestion(0);
-    setAnswers({});
-    setShowResults(false);
-    setResults([]);
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'very_low': return 'bg-red-100 text-red-800';
-      case 'low': return 'bg-orange-100 text-orange-800';
-      case 'average': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-green-100 text-green-800';
-      case 'very_high': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getLevelText = (level: string) => {
-    switch (level) {
-      case 'very_low': return 'Очень низкий';
-      case 'low': return 'Низкий';
-      case 'average': return 'Средний';
-      case 'high': return 'Высокий';
-      case 'very_high': return 'Очень высокий';
-      default: return 'Неизвестно';
-    }
-  };
-
-  if (showResults) {
-    return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">
-              Результаты теста Big Five
-            </CardTitle>
-            <p className="text-center text-muted-foreground">
-              Ваш профиль личности по пятифакторной модели
-            </p>
-          </CardHeader>
-        </Card>
-
-        <div className="grid gap-6">
-          {results.map((result) => {
-            console.log('Rendering result:', result);
-            return (
-            <Card key={result.factor}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      {React.createElement(bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].icon, {
-                        className: "w-5 h-5 text-primary"
-                      })}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].description}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge className={getLevelColor(result.level)}>
-                    {getLevelText(result.level)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Баллы: {result.score} / {result.maxScore}</span>
-                    <span>{result.percentage}%</span>
-                  </div>
-                  <Progress value={result.percentage} className="h-2" />
-                </div>
-                
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm">📖 Интерпретация Big Five: высокий, средний и низкий уровень</h4>
-                  
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border-l-4 border-blue-500">
-                    <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-3">
-                      🔹 {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].name}
-                    </h5>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Высокий уровень</h6>
-                        <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
-                          {result.level === 'high' || result.level === 'very_high' 
-                            ? result.description 
-                            : getHighLevelDescription(result.factor.toLowerCase())}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Средний уровень</h6>
-                        <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
-                          {result.level === 'average' 
-                            ? result.description 
-                            : getMediumLevelDescription(result.factor.toLowerCase())}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Низкий уровень</h6>
-                        <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
-                          {result.level === 'low' || result.level === 'very_low' 
-                            ? result.description 
-                            : getLowLevelDescription(result.factor.toLowerCase())}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-sm">Характерные черты:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {result.traits.map((trait, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {trait}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-          })}
-        </div>
-
-        <div className="flex justify-center space-x-4">
-          <Button onClick={restartTest} variant="outline">
-            Пройти тест заново
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const currentQ = bigFiveQuestions[currentQuestion];
-  const hasAnswer = answers[currentQ.id] !== undefined;
-
+  // Один return statement с условным рендерингом
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            {bigFiveTestConfig.title}
-          </CardTitle>
-          <p className="text-center text-muted-foreground">
-            {bigFiveTestConfig.description}
-          </p>
-        </CardHeader>
-      </Card>
+    <>
+      {showResults ? (
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">
+                Результаты теста Big Five
+              </CardTitle>
+              <p className="text-center text-muted-foreground">
+                Ваш профиль личности по пятифакторной модели
+              </p>
+            </CardHeader>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">
-                Вопрос {currentQuestion + 1} из {totalQuestions}
-              </span>
-              <span className="text-sm font-medium">
-                {Math.round(progress)}%
-              </span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-medium">{currentQ.question}</h3>
-            <p className="text-sm text-muted-foreground">
-              Выберите ответ по шкале от 1 до 5
-            </p>
-          </div>
-
-          <div className="grid gap-3">
-            {[
-              { score: 1, text: "Совершенно не согласен" },
-              { score: 2, text: "Не согласен" },
-              { score: 3, text: "Нейтрально" },
-              { score: 4, text: "Согласен" },
-              { score: 5, text: "Полностью согласен" }
-            ].map((option) => (
-              <Button
-                key={option.score}
-                variant={answers[currentQ.id] === option.score ? "default" : "outline"}
-                className="justify-start h-auto p-4 text-left"
-                onClick={() => handleAnswer(option.score)}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    answers[currentQ.id] === option.score 
-                      ? "border-primary bg-primary text-primary-foreground" 
-                      : "border-muted-foreground"
-                  }`}>
-                    {answers[currentQ.id] === option.score && (
-                      <div className="w-2 h-2 rounded-full bg-current" />
-                    )}
+          <div className="grid gap-6">
+            {results.map((result) => (
+              <Card key={result.factor}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        {React.createElement(bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].icon, {
+                          className: "w-5 h-5 text-primary"
+                        })}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].description}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className={getLevelColor(result.level)}>
+                      {getLevelText(result.level)}
+                    </Badge>
                   </div>
-                  <span className="font-medium">{option.score}.</span>
-                  <span>{option.text}</span>
-                </div>
-              </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Баллы: {result.score} / {result.maxScore}</span>
+                      <span>{result.percentage}%</span>
+                    </div>
+                    <Progress value={result.percentage} className="h-2" />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-sm">📖 Интерпретация Big Five: высокий, средний и низкий уровень</h4>
+                    
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border-l-4 border-blue-500">
+                      <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-3">
+                        🔹 {bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].name}
+                      </h5>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Высокий уровень</h6>
+                          <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
+                            {result.level === 'high' || result.level === 'very_high' 
+                              ? result.description 
+                              : getHighLevelDescription(result.factor.toLowerCase())}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Средний уровень</h6>
+                          <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
+                            {result.level === 'average' 
+                              ? result.description 
+                              : getMediumLevelDescription(result.factor.toLowerCase())}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <h6 className="font-medium text-blue-700 dark:text-blue-400 text-sm">Низкий уровень</h6>
+                          <p className="text-blue-600 dark:text-blue-300 text-sm leading-relaxed">
+                            {result.level === 'low' || result.level === 'very_low' 
+                              ? result.description 
+                              : getLowLevelDescription(result.factor.toLowerCase())}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Характерные черты:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {result.traits.map((trait, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {trait}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-
-          <Separator />
-
-          <div className="flex justify-between">
-            <Button
-              onClick={previousQuestion}
-              disabled={currentQuestion === 0}
-              variant="outline"
-            >
-              Назад
+          
+          <div className="flex justify-center space-x-4">
+            <Button onClick={restartTest} variant="outline">
+              Пройти тест заново
             </Button>
-            
-            {currentQuestion === totalQuestions - 1 ? (
-              <Button
-                onClick={finishTest}
-                disabled={!hasAnswer}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Завершить тест
-              </Button>
-            ) : (
-              <Button
-                onClick={nextQuestion}
-                disabled={!hasAnswer}
-              >
-                Следующий вопрос
-              </Button>
-            )}
           </div>
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Отвечено: {Object.keys(answers).length} из {totalQuestions}</p>
-            {currentQ.isReversed && (
-              <p className="text-orange-600 font-medium">
-                ⚠️ Обратный вопрос - будьте внимательны при ответе
+        </div>
+      ) : (
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">
+                {bigFiveTestConfig.title}
+              </CardTitle>
+              <p className="text-center text-muted-foreground">
+                {bigFiveTestConfig.description}
               </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            </CardHeader>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">
+                    Вопрос {currentQuestion + 1} из {totalQuestions}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {Math.round(progress)}%
+                  </span>
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-medium">{currentQ.question}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Выберите ответ по шкале от 1 до 5
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {[
+                  { score: 1, text: "Совершенно не согласен" },
+                  { score: 2, text: "Не согласен" },
+                  { score: 3, text: "Нейтрально" },
+                  { score: 4, text: "Согласен" },
+                  { score: 5, text: "Полностью согласен" }
+                ].map((option) => (
+                  <Button
+                    key={option.score}
+                    variant={answers[currentQ.id] === option.score ? "default" : "outline"}
+                    className="justify-start h-auto p-4 text-left"
+                    onClick={() => handleAnswer(option.score)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        answers[currentQ.id] === option.score 
+                          ? "border-primary bg-primary text-primary-foreground" 
+                          : "border-muted-foreground"
+                      }`}>
+                        {answers[currentQ.id] === option.score && (
+                          <div className="w-2 h-2 rounded-full bg-current" />
+                        )}
+                      </div>
+                      <span className="font-medium">{option.score}.</span>
+                      <span>{option.text}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+
+              <Separator />
+
+              <div className="flex justify-between">
+                <Button
+                  onClick={previousQuestion}
+                  disabled={currentQuestion === 0}
+                  variant="outline"
+                >
+                  Назад
+                </Button>
+                
+                {currentQuestion === totalQuestions - 1 ? (
+                  <Button
+                    onClick={finishTest}
+                    disabled={!hasAnswer}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    Завершить тест
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={nextQuestion}
+                    disabled={!hasAnswer}
+                  >
+                    Следующий вопрос
+                  </Button>
+                )}
+              </div>
+
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Отвечено: {Object.keys(answers).length} из {totalQuestions}</p>
+                {currentQ.isReversed && (
+                  <p className="text-orange-600 font-medium">
+                    ⚠️ Обратный вопрос - будьте внимательны при ответе
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };

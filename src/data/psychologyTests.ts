@@ -750,4 +750,28 @@ export const archetypeTest: TestConfig = {
   ]
 };
 
-export const allTests = [mbtiTest, bigFiveTest, archetypeTest];
+// Stress Test
+export const stressTest: TestConfig = {
+  id: 'stress',
+  title: 'Тест на определение уровня стресса',
+  description: 'Авторский тест из 40 вопросов для оценки уровня стресса и эмоционального состояния',
+  icon: Activity,
+  questions: [
+    {
+      question: "Тест на стресс включает 40 вопросов для определения уровня стресса по 4 категориям",
+      options: [
+        { text: "Начать тест", score: 0 }
+      ]
+    }
+  ],
+  results: [
+    {
+      min: 0,
+      max: 160,
+      title: "Уровень стресса",
+      description: "Ваш уровень стресса с подробной интерпретацией и рекомендациями"
+    }
+  ]
+};
+
+export const allTests = [mbtiTest, bigFiveTest, archetypeTest, stressTest];

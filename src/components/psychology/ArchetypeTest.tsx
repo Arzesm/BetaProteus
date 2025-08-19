@@ -17,6 +17,7 @@ interface ArchetypeTestProps {
 }
 
 export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
+  // Все хуки в начале компонента
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
   const [showResults, setShowResults] = useState(false);
@@ -24,31 +25,30 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
   const [showFullProfile, setShowFullProfile] = useState(false);
   const [expandedArchetypes, setExpandedArchetypes] = useState<string[]>([]);
   const [forceUpdate, setForceUpdate] = useState(0);
-  
-  // Временная переменная для отладки
-  const debugInfo = `showResults: ${showResults}, results: ${results.length}, expanded: ${expandedArchetypes.join(',')}, force: ${forceUpdate}`;
 
-
-
+  // Вычисляемые значения
   const totalQuestions = archetypeQuestions.length;
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+  const sortedResults = showResults ? [...results].sort((a, b) => b.score - a.score) : [];
+  const topArchetypes = sortedResults.slice(0, 3);
+  const currentQ = archetypeQuestions[currentQuestion];
+  const hasAnswer = answers[currentQ.id] !== undefined;
 
-  // Автоматически разворачиваем первый архетип при появлении результатов
+  // Все useEffect в начале компонента
   useEffect(() => {
-    console.log('=== USE_EFFECT СРАБОТАЛ ===');
-    console.log('showResults:', showResults);
-    console.log('results.length:', results.length);
-    console.log('expandedArchetypes.length:', expandedArchetypes.length);
-    
     if (showResults && results.length > 0 && expandedArchetypes.length === 0) {
-      console.log('=== USE_EFFECT: АВТОМАТИЧЕСКОЕ РАЗВОРАЧИВАНИЕ ===');
       const topArchetype = results.sort((a, b) => b.score - a.score)[0];
-      console.log('Топ архетип для разворачивания:', topArchetype.archetype);
       setExpandedArchetypes([topArchetype.archetype]);
-      console.log('Установили expandedArchetypes в:', [topArchetype.archetype]);
     }
-  }, [showResults, results]); // Убрали expandedArchetypes из зависимостей
+  }, [showResults, results, expandedArchetypes.length]);
 
+  useEffect(() => {
+    if (showResults && expandedArchetypes.length > 0) {
+      setForceUpdate(prev => prev + 1);
+    }
+  }, [showResults, expandedArchetypes.length]);
+
+  // Функции
   const handleAnswer = (score: number) => {
     const questionId = archetypeQuestions[currentQuestion].id;
     setAnswers(prev => ({
@@ -71,24 +71,9 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
 
   const finishTest = () => {
     const calculatedResults = calculateArchetypeResults(answers);
-    
-    // Временная проверка - выводим в консоль
-    console.log('=== ПРОВЕРКА РЕЗУЛЬТАТОВ ===');
-    console.log('Все результаты:', calculatedResults);
-    if (calculatedResults.length > 0) {
-      const firstResult = calculatedResults[0];
-      console.log('Первый результат:', firstResult);
-      console.log('Есть ли описание?', !!firstResult.description);
-      console.log('Длина описания:', firstResult.description?.length);
-      console.log('Первые 200 символов:', firstResult.description?.substring(0, 200));
-    }
-    
-    // Устанавливаем результаты и показываем их
     setResults(calculatedResults);
     setShowResults(true);
     onComplete(calculatedResults);
-    
-    // Сбрасываем expandedArchetypes, чтобы useEffect сработал
     setExpandedArchetypes([]);
   };
 
@@ -99,6 +84,14 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
     setResults([]);
     setShowFullProfile(false);
     setExpandedArchetypes([]);
+  };
+
+  const toggleArchetype = (archetype: string) => {
+    setExpandedArchetypes(prev => 
+      prev.includes(archetype) 
+        ? prev.filter(a => a !== archetype)
+        : [...prev, archetype]
+    );
   };
 
   const getLevelColor = (level: string) => {
@@ -121,156 +114,171 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
     }
   };
 
-  if (showResults) {
-    console.log('=== НАЧАЛО РЕНДЕРИНГА РЕЗУЛЬТАТОВ ===');
-    console.log('showResults:', showResults);
-    console.log('results.length:', results.length);
-    console.log('expandedArchetypes:', expandedArchetypes);
-    console.log('forceUpdate:', forceUpdate);
-    
-    // Сортируем результаты по убыванию баллов
-    const sortedResults = [...results].sort((a, b) => b.score - a.score);
-    const topArchetypes = sortedResults.slice(0, 3);
-    
-    // Отладочная информация
-    console.log('=== ОТЛАДКА UI ===');
-    console.log('Отсортированные результаты:', sortedResults.map(r => ({ archetype: r.archetype, score: r.score })));
-    console.log('Топ архетипы:', topArchetypes.map(r => r.archetype));
-    console.log('Первый архетип:', topArchetypes[0]?.archetype);
-    console.log('Должен ли первый архетип быть развернут?', expandedArchetypes.includes(topArchetypes[0]?.archetype));
-    console.log('Описание первого архетипа:', topArchetypes[0]?.description);
-    
-    // Принудительно обновляем, если нужно
-    if (expandedArchetypes.length > 0) {
-      console.log('=== ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ ===');
-      setForceUpdate(prev => prev + 1);
-    }
-
-    return (
-      <div className="space-y-6">
-        <Card className="border-4 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardHeader className="bg-purple-100">
-            <CardTitle className="text-3xl text-center text-purple-800 font-bold">🎭 РЕЗУЛЬТАТЫ ТЕСТА НА АРХЕТИПЫ 🎭</CardTitle>
-            <p className="text-center text-purple-600 font-semibold text-lg">
-              🌟 Ваш уникальный архетипический профиль личности 🌟
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Большая отладочная информация */}
-            <div className="p-4 bg-red-100 border-2 border-red-500 rounded-lg">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-bold text-red-800">🚨 ОТЛАДОЧНАЯ ИНФОРМАЦИЯ</h4>
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={() => setForceUpdate(prev => prev + 1)} 
-                    size="sm" 
-                    variant="outline"
-                    className="text-red-800 border-red-500"
-                  >
-                    Обновить (Force Update: {forceUpdate})
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      console.log('=== ТЕСТОВАЯ КНОПКА ===');
-                      console.log('Текущий expandedArchetypes:', expandedArchetypes);
-                      setExpandedArchetypes(['innocent']);
-                      console.log('Установили expandedArchetypes в:', ['innocent']);
-                    }} 
-                    size="sm" 
-                    variant="outline"
-                    className="text-red-800 border-red-500"
-                  >
-                    Тест: Развернуть Невинный
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm text-red-800">
-                <p><strong>Отладочная информация:</strong> {debugInfo}</p>
-                <p><strong>Количество результатов:</strong> {results.length}</p>
-                <p><strong>Состояние expandedArchetypes:</strong> [{expandedArchetypes.join(', ') || 'пусто'}]</p>
-                <p><strong>Первый архетип:</strong> {topArchetypes[0]?.archetype || 'НЕТ'}</p>
-                <p><strong>Длина описания первого архетипа:</strong> {topArchetypes[0]?.description?.length || 0} символов</p>
-                <p><strong>Первые 100 символов описания:</strong> {topArchetypes[0]?.description?.substring(0, 100) || 'НЕТ ОПИСАНИЯ'}</p>
-                <p><strong>Уровень первого архетипа:</strong> {topArchetypes[0]?.level || 'НЕТ'}</p>
-                <p><strong>Функция getArchetypeDescription работает:</strong> {topArchetypes[0]?.archetype && topArchetypes[0]?.level ? 'ДА' : 'НЕТ'}</p>
-              </div>
-            </div>
-            
-            {/* Топ-3 архетипа с разворачивающимся описанием */}
-            <div className="space-y-4">
-              <h3 className="text-2xl font-bold text-center text-purple-800 bg-yellow-200 p-3 rounded-lg border-2 border-yellow-400">
-                🏆 ВАШИ ВЕДУЩИЕ АРХЕТИПЫ 🏆
-              </h3>
-              <p className="text-center text-lg text-purple-600 font-semibold bg-blue-100 p-2 rounded-lg border border-blue-300">
-                💡 Нажмите на любой архетип, чтобы развернуть подробное описание 💡
+  // Один return statement с условным рендерингом
+  return (
+    <>
+      {showResults ? (
+        <div className="space-y-6">
+          <Card className="border-4 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardHeader className="bg-purple-100">
+              <CardTitle className="text-3xl text-center text-purple-800 font-bold">🎭 РЕЗУЛЬТАТЫ ТЕСТА НА АРХЕТИПЫ 🎭</CardTitle>
+              <p className="text-center text-purple-600 font-semibold text-lg">
+                🌟 Ваш уникальный архетипический профиль личности 🌟
               </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Топ-3 архетипа с разворачивающимся описанием */}
               <div className="space-y-4">
-                {topArchetypes.map((result, index) => {
-                  const archetypeConfig = archetypeTestConfig.archetypes[result.archetype as keyof typeof archetypeTestConfig.archetypes];
-                  const IconComponent = archetypeConfig.icon;
-                  
-                  return (
-                    <Card key={result.archetype} className="overflow-hidden shadow-2xl border-4 border-blue-300 hover:border-purple-500 transition-all duration-300 transform hover:scale-105">
-                      <CardContent className="p-0">
-                        <div 
-                          className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 bg-gradient-to-r from-blue-100 to-indigo-100"
-                          onClick={() => {
-                            console.log('=== КЛИК ПО АРХЕТИПУ ===');
-                            console.log('Кликнули по архетипу:', result.archetype);
-                            console.log('Текущий expandedArchetypes:', expandedArchetypes);
-                            const currentExpanded = expandedArchetypes.includes(result.archetype);
-                            console.log('Сейчас развернут?', currentExpanded);
-                            if (currentExpanded) {
-                              const newExpanded = expandedArchetypes.filter(a => a !== result.archetype);
-                              console.log('Сворачиваем, новый массив:', newExpanded);
-                              setExpandedArchetypes(newExpanded);
-                            } else {
-                              const newExpanded = [...expandedArchetypes, result.archetype];
-                              console.log('Разворачиваем, новый массив:', newExpanded);
-                              setExpandedArchetypes(newExpanded);
-                            }
-                          }}
-                          onMouseEnter={() => console.log('Мышь над архетипом:', result.archetype)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <IconComponent className="w-12 h-12 text-primary" />
-                              <div className="text-left">
-                                <h4 className="font-semibold text-lg">{archetypeConfig.name}</h4>
-                                <Badge className={getLevelColor(result.level)}>
-                                  {getLevelText(result.level)}
-                                </Badge>
+                <h3 className="text-2xl font-bold text-center text-purple-800 bg-yellow-200 p-3 rounded-lg border-2 border-yellow-400">
+                  🏆 ВАШИ ВЕДУЩИЕ АРХЕТИПЫ 🏆
+                </h3>
+                <p className="text-center text-lg text-purple-600 font-semibold bg-blue-100 p-2 rounded-lg border border-blue-300">
+                  💡 Нажмите на любой архетип, чтобы развернуть подробное описание 💡
+                </p>
+                <div className="space-y-4">
+                  {topArchetypes.map((result, index) => {
+                    const archetypeConfig = archetypeTestConfig.archetypes[result.archetype as keyof typeof archetypeTestConfig.archetypes];
+                    const IconComponent = archetypeConfig.icon;
+                    
+                    return (
+                      <Card key={result.archetype} className="overflow-hidden shadow-2xl border-4 border-blue-300 hover:border-purple-500 transition-all duration-300 transform hover:scale-105">
+                        <CardContent className="p-0">
+                          <div 
+                            className="p-6 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 bg-gradient-to-r from-blue-100 to-indigo-100"
+                            onClick={() => toggleArchetype(result.archetype)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <IconComponent className="w-12 h-12 text-primary" />
+                                <div className="text-left">
+                                  <h4 className="font-semibold text-lg">{archetypeConfig.name}</h4>
+                                  <Badge className={getLevelColor(result.level)}>
+                                    {getLevelText(result.level)}
+                                  </Badge>
+                                </div>
                               </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-primary">
-                                {result.score}/{result.maxScore}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
-                                {result.percentage}%
-                              </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {expandedArchetypes.includes(result.archetype) ? 'Свернуть' : 'Развернуть'}
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-primary">
+                                  {result.score}/{result.maxScore}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {result.percentage}%
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {expandedArchetypes.includes(result.archetype) ? 'Свернуть' : 'Развернуть'}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Разворачивающееся описание */}
-                        {expandedArchetypes.includes(result.archetype) && (
-                          <div className="border-t-4 border-purple-400 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6 space-y-4 shadow-inner">
-                            <div className="prose prose-sm max-w-none dark:prose-invert text-foreground">
-                              <div 
-                                className="bg-white p-4 rounded-lg border-2 border-purple-200 shadow-lg"
-                                dangerouslySetInnerHTML={{
-                                  __html: result.description.replace(/\n/g, '<br/>')
-                                }}
-                              />
-                            </div>
-                            
-                            <div className="grid md:grid-cols-2 gap-4">
+                          
+                          {/* Разворачивающееся описание */}
+                          {expandedArchetypes.includes(result.archetype) && (
+                            <div className="border-t-4 border-purple-400 bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-6 space-y-4 shadow-inner">
+                              <div className="prose prose-sm max-w-none dark:prose-invert text-foreground">
+                                <div 
+                                  className="bg-white p-4 rounded-lg border-2 border-purple-200 shadow-lg"
+                                  dangerouslySetInnerHTML={{
+                                    __html: result.description.replace(/\n/g, '<br/>')
+                                  }}
+                                />
+                              </div>
+                              
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <h5 className="font-medium mb-2">✨ Сильные стороны</h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {result.strengths.map((strength, index) => (
+                                      <Badge key={index} variant="secondary" className="text-xs">
+                                        {strength}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <h5 className="font-medium mb-2">⚠️ Возможные слабости</h5>
+                                  <div className="flex flex-wrap gap-2">
+                                    {result.weaknesses.map((weakness, index) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        {weakness}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                  <h5 className="font-medium mb-2">😨 Главные страхи</h5>
+                                  <ul className="text-sm text-muted-foreground space-y-1">
+                                    {result.fears.map((fear, index) => (
+                                      <li key={index}>• {fear}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                
+                                <div>
+                                  <h5 className="font-medium mb-2">🎯 Жизненные цели</h5>
+                                  <ul className="text-sm text-muted-foreground space-y-1">
+                                    {result.goals.map((goal, index) => (
+                                      <li key={index}>• {goal}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                              
                               <div>
-                                <h5 className="font-medium mb-2">✨ Сильные стороны</h5>
+                                <h5 className="font-medium mb-2">👤 Как вас воспринимают другие</h5>
+                                <p className="text-sm text-muted-foreground">{result.perception}</p>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <Separator />
+
+              {/* Детальные результаты по всем архетипам */}
+              {showFullProfile && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-center">📊 Полный профиль архетипов</h3>
+                  <Accordion type="single" collapsible className="w-full">
+                    {sortedResults.map((result) => {
+                      const archetypeConfig = archetypeTestConfig.archetypes[result.archetype as keyof typeof archetypeTestConfig.archetypes];
+                      const IconComponent = archetypeConfig.icon;
+                      
+                      return (
+                        <AccordionItem key={result.archetype} value={result.archetype}>
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center space-x-3 w-full">
+                              <IconComponent className="w-5 h-5 text-primary" />
+                              <span className="font-medium">{archetypeConfig.name}</span>
+                              <Badge className={getLevelColor(result.level)}>
+                                {getLevelText(result.level)}
+                              </Badge>
+                              <span className="ml-auto text-sm text-muted-foreground">
+                                {result.score}/{result.maxScore} ({result.percentage}%)
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-4">
+                            <div className="space-y-3">
+                              <div>
+                                <h5 className="font-medium mb-2">Описание</h5>
+                                <div 
+                                  className="text-sm text-muted-foreground"
+                                  dangerouslySetInnerHTML={{
+                                    __html: result.description.replace(/\n/g, '<br/>')
+                                  }}
+                                />
+                              </div>
+                              
+                              <div>
+                                <h5 className="font-medium mb-2">Сильные стороны</h5>
                                 <div className="flex flex-wrap gap-2">
                                   {result.strengths.map((strength, index) => (
                                     <Badge key={index} variant="secondary" className="text-xs">
@@ -281,7 +289,7 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                               </div>
                               
                               <div>
-                                <h5 className="font-medium mb-2">⚠️ Возможные слабости</h5>
+                                <h5 className="font-medium mb-2">Возможные слабости</h5>
                                 <div className="flex flex-wrap gap-2">
                                   {result.weaknesses.map((weakness, index) => (
                                     <Badge key={index} variant="outline" className="text-xs">
@@ -290,11 +298,9 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                                   ))}
                                 </div>
                               </div>
-                            </div>
-                            
-                            <div className="grid md:grid-cols-2 gap-4">
+                              
                               <div>
-                                <h5 className="font-medium mb-2">😨 Главные страхи</h5>
+                                <h5 className="font-medium mb-2">Главные страхи</h5>
                                 <ul className="text-sm text-muted-foreground space-y-1">
                                   {result.fears.map((fear, index) => (
                                     <li key={index}>• {fear}</li>
@@ -303,264 +309,167 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                               </div>
                               
                               <div>
-                                <h5 className="font-medium mb-2">🎯 Жизненные цели</h5>
+                                <h5 className="font-medium mb-2">Жизненные цели</h5>
                                 <ul className="text-sm text-muted-foreground space-y-1">
                                   {result.goals.map((goal, index) => (
                                     <li key={index}>• {goal}</li>
                                   ))}
                                 </ul>
                               </div>
+                              
+                              <div>
+                                <h5 className="font-medium mb-2">Как вас воспринимают другие</h5>
+                                <p className="text-sm text-muted-foreground">{result.perception}</p>
+                              </div>
                             </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">👤 Как вас воспринимают другие</h5>
-                              <p className="text-sm text-muted-foreground">{result.perception}</p>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </div>
+              )}
+
+              <div className="flex justify-center space-x-4">
+                <Button 
+                  onClick={() => setShowFullProfile(!showFullProfile)} 
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  {showFullProfile ? (
+                    <>
+                      <span>Скрыть полный профиль</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Показать полный профиль всех архетипов</span>
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={restartTest} 
+                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                  🔄 Пройти тест заново 🔄
+                </Button>
               </div>
-            </div>
-
-
-
-            <Separator />
-
-            {/* Детальные результаты по всем архетипам */}
-            {showFullProfile && (
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardHeader>
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center">📊 Полный профиль архетипов</h3>
-                <Accordion type="single" collapsible className="w-full">
-                  {sortedResults.map((result) => {
-                    const archetypeConfig = archetypeTestConfig.archetypes[result.archetype as keyof typeof archetypeTestConfig.archetypes];
-                    const IconComponent = archetypeConfig.icon;
-                    
-                    return (
-                      <AccordionItem key={result.archetype} value={result.archetype}>
-                        <AccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center space-x-3 w-full">
-                            <IconComponent className="w-5 h-5 text-primary" />
-                            <span className="font-medium">{archetypeConfig.name}</span>
-                            <Badge className={getLevelColor(result.level)}>
-                              {getLevelText(result.level)}
-                            </Badge>
-                            <span className="ml-auto text-sm text-muted-foreground">
-                              {result.score}/{result.maxScore} ({result.percentage}%)
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div>
-                              <h5 className="font-medium mb-2">Описание</h5>
-                              <div 
-                                className="text-sm text-muted-foreground"
-                                dangerouslySetInnerHTML={{
-                                  __html: result.description.replace(/\n/g, '<br/>')
-                                }}
-                              />
-                            </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">Сильные стороны</h5>
-                              <div className="flex flex-wrap gap-2">
-                                {result.strengths.map((strength, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    {strength}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">Возможные слабости</h5>
-                              <div className="flex flex-wrap gap-2">
-                                {result.weaknesses.map((weakness, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
-                                    {weakness}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">Главные страхи</h5>
-                              <ul className="text-sm text-muted-foreground space-y-1">
-                                {result.fears.map((fear, index) => (
-                                  <li key={index}>• {fear}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">Жизненные цели</h5>
-                              <ul className="text-sm text-muted-foreground space-y-1">
-                                {result.goals.map((goal, index) => (
-                                  <li key={index}>• {goal}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            
-                            <div>
-                              <h5 className="font-medium mb-2">Как вас воспринимают другие</h5>
-                              <p className="text-sm text-muted-foreground">{result.perception}</p>
-                            </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold">Вопрос {currentQuestion + 1} из {totalQuestions}</h2>
+                  <Badge variant="secondary">
+                    {archetypeTestConfig.archetypes[currentQ.archetype].name}
+                  </Badge>
+                </div>
+                <Progress value={progress} className="h-2" />
               </div>
-            )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-medium">{currentQ.question}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Выберите ответ по шкале от 0 до 3
+                </p>
+              </div>
 
-            <div className="flex justify-center space-x-4">
-              <Button 
-                onClick={() => setShowFullProfile(!showFullProfile)} 
-                variant="outline"
-                className="flex items-center space-x-2"
-              >
-                {showFullProfile ? (
-                  <>
-                    <span>Скрыть полный профиль</span>
-                  </>
+              <div className="grid gap-3">
+                <Button
+                  variant={answers[currentQ.id] === 0 ? "default" : "outline"}
+                  onClick={() => handleAnswer(0)}
+                  className="justify-start h-auto p-4"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">0 - Совсем не про меня</div>
+                    <div className="text-sm text-muted-foreground">
+                      Это утверждение абсолютно не соответствует моей личности
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant={answers[currentQ.id] === 1 ? "default" : "outline"}
+                  onClick={() => handleAnswer(1)}
+                  className="justify-start h-auto p-4"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">1 - Скорее не про меня</div>
+                    <div className="text-sm text-muted-foreground">
+                      Это утверждение в основном не соответствует моей личности
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant={answers[currentQ.id] === 2 ? "default" : "outline"}
+                  onClick={() => handleAnswer(2)}
+                  className="justify-start h-auto p-4"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">2 - Иногда про меня</div>
+                    <div className="text-sm text-muted-foreground">
+                      Это утверждение иногда соответствует моей личности
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant={answers[currentQ.id] === 3 ? "default" : "outline"}
+                  onClick={() => handleAnswer(3)}
+                  className="justify-start h-auto p-4"
+                >
+                  <div className="text-left">
+                    <div className="font-medium">3 - Очень похоже на меня</div>
+                    <div className="text-sm text-muted-foreground">
+                      Это утверждение очень точно описывает мою личность
+                    </div>
+                  </div>
+                </Button>
+              </div>
+
+              <div className="flex justify-between">
+                <Button
+                  onClick={previousQuestion}
+                  disabled={currentQuestion === 0}
+                  variant="outline"
+                >
+                  Назад
+                </Button>
+                
+                {currentQuestion === totalQuestions - 1 ? (
+                  <Button
+                    onClick={finishTest}
+                    disabled={!hasAnswer}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Завершить тест
+                  </Button>
                 ) : (
-                  <>
-                    <span>Показать полный профиль всех архетипов</span>
-                  </>
+                  <Button
+                    onClick={nextQuestion}
+                    disabled={!hasAnswer}
+                  >
+                    Следующий вопрос
+                  </Button>
                 )}
-              </Button>
-              <Button 
-                onClick={restartTest} 
-                className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300"
-              >
-                🔄 Пройти тест заново 🔄
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentQ = archetypeQuestions[currentQuestion];
-  const hasAnswer = answers[currentQ.id] !== undefined;
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Вопрос {currentQuestion + 1} из {totalQuestions}</h2>
-              <Badge variant="secondary">
-                {archetypeTestConfig.archetypes[currentQ.archetype].name}
-              </Badge>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-medium">{currentQ.question}</h3>
-            <p className="text-sm text-muted-foreground">
-              Выберите ответ по шкале от 0 до 3
-            </p>
-          </div>
-
-          <div className="grid gap-3">
-            <Button
-              variant={answers[currentQ.id] === 0 ? "default" : "outline"}
-              onClick={() => handleAnswer(0)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">0 - Совсем не про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение абсолютно не соответствует моей личности
-                </div>
               </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 1 ? "default" : "outline"}
-              onClick={() => handleAnswer(1)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">1 - Скорее не про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение в основном не соответствует моей личности
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 2 ? "default" : "outline"}
-              onClick={() => handleAnswer(2)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">2 - Иногда про меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение иногда соответствует моей личности
-                </div>
-              </div>
-            </Button>
-            
-            <Button
-              variant={answers[currentQ.id] === 3 ? "default" : "outline"}
-              onClick={() => handleAnswer(3)}
-              className="justify-start h-auto p-4"
-            >
-              <div className="text-left">
-                <div className="font-medium">3 - Очень похоже на меня</div>
-                <div className="text-sm text-muted-foreground">
-                  Это утверждение очень точно описывает мою личность
-                </div>
-              </div>
-            </Button>
-          </div>
 
-          <div className="flex justify-between">
-            <Button
-              onClick={previousQuestion}
-              disabled={currentQuestion === 0}
-              variant="outline"
-            >
-              Назад
-            </Button>
-            
-            {currentQuestion === totalQuestions - 1 ? (
-              <Button
-                onClick={finishTest}
-                disabled={!hasAnswer}
-                className="bg-primary hover:bg-primary/90"
-              >
-                Завершить тест
-              </Button>
-            ) : (
-              <Button
-                onClick={nextQuestion}
-                disabled={!hasAnswer}
-              >
-                Следующий вопрос
-              </Button>
-            )}
-          </div>
-
-          {!hasAnswer && (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Пожалуйста, выберите ответ, чтобы продолжить
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              {!hasAnswer && (
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Пожалуйста, выберите ответ, чтобы продолжить
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };

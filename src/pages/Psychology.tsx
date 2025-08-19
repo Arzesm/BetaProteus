@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Layers, Activity, Crown, Brain } from "lucide-react";
 import { MBTITest } from "@/components/psychology/MBTITest";
-import { StressTest } from "@/components/psychology/StressTest";
+import StressTest from "@/components/psychology/StressTest";
 import { BigFiveTest } from "@/components/psychology/BigFiveTest";
 import { ArchetypeTest } from "@/components/psychology/ArchetypeTest";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { pageAnimation, cardAnimation, cardHover } from "@/lib/animations";
 import html2canvas from "html2canvas";
 import { BigFiveResult } from "@/data/bigFiveTest";
 import { ArchetypeResult } from "@/data/archetypeTest";
+import { StressResult } from "@/data/stressTest";
 
 type MbtiScores = { E: number; I: number; S: number; N: number; T: number; F: number; J: number; P: number };
 
@@ -23,7 +24,7 @@ type TestComponent = React.ComponentType<{
 
 const PsychologyPage = () => {
   const [activeTest, setActiveTest] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, string | { type: string; scores: MbtiScores } | BigFiveResult[] | ArchetypeResult[]>>(() => {
+  const [testResults, setTestResults] = useState<Record<string, string | { type: string; scores: MbtiScores } | BigFiveResult[] | ArchetypeResult[] | StressResult>>(() => {
     try {
       const savedResults = localStorage.getItem('psychologyTestResults');
       return savedResults ? JSON.parse(savedResults) : {};
@@ -32,6 +33,21 @@ const PsychologyPage = () => {
       return {};
     }
   });
+
+  // Хуки для управления состоянием архетипов - вынесены в начало компонента
+  const [expandedArchetypes, setExpandedArchetypes] = useState<string[]>([]);
+  
+  const toggleArchetype = (archetypeId: string) => {
+    setExpandedArchetypes(prev => 
+      prev.includes(archetypeId) 
+        ? prev.filter(id => id !== archetypeId)
+        : [...prev, archetypeId]
+    );
+  };
+
+  const resetArchetypeState = () => {
+    setExpandedArchetypes([]);
+  };
 
   // Функции для получения описаний Big Five разных уровней
   const getBigFiveHighLevelDescription = (factor: string) => {
@@ -131,10 +147,10 @@ const PsychologyPage = () => {
     },
     {
       id: 'stress',
-      title: 'Тест на стресс',
-      description: 'Оцените ваш уровень стресса',
-      longDescription: 'Краткий скрининг текущего уровня стресса по поведенческим и физиологическим маркерам. Не является медицинской диагностикой, но помогает оценить необходимость отдыха и профилактик.',
-      icon: Brain,
+      title: 'Тест на определение уровня стресса',
+      description: 'Авторский тест из 40 вопросов для оценки уровня стресса и эмоционального состояния',
+      longDescription: 'Полный тест на стресс с 40 вопросами по 4 категориям: Эмоциональное состояние, Физические проявления, Поведение и привычки, Социальные и профессиональные аспекты. Включает детальную интерпретацию для каждого уровня стресса (низкий, умеренный, высокий, очень высокий) с персональными рекомендациями.',
+      icon: Activity,
       component: StressTest,
       color: 'text-red-500'
     }
@@ -142,9 +158,13 @@ const PsychologyPage = () => {
 
   const handleStartTest = (testId: string) => {
     setActiveTest(testId);
+    // Сбрасываем состояние архетипов при начале нового теста
+    if (testId === 'archetypes') {
+      resetArchetypeState();
+    }
   };
 
-  const handleTestComplete = (testId: string, result: string | { type: string; scores: MbtiScores } | BigFiveResult[] | ArchetypeResult[]) => {
+  const handleTestComplete = (testId: string, result: string | { type: string; scores: MbtiScores } | BigFiveResult[] | ArchetypeResult[] | StressResult) => {
     if (testId === 'mbti' && typeof result === 'object' && 'type' in result) {
       // Для MBTI сохраняем полный результат с оценками
       setTestResults(prev => ({
@@ -163,6 +183,12 @@ const PsychologyPage = () => {
         ...prev,
         [testId]: result
       }));
+    } else if (testId === 'stress' && typeof result === 'object' && 'level' in result) {
+      // Для теста на стресс сохраняем результат
+      setTestResults(prev => ({
+        ...prev,
+        [testId]: result
+      }));
     } else {
       // Для остальных тестов сохраняем строку
       setTestResults(prev => ({
@@ -171,6 +197,10 @@ const PsychologyPage = () => {
       }));
     }
     setActiveTest(null);
+    // Сбрасываем состояние архетипов при завершении теста
+    if (testId === 'archetypes') {
+      resetArchetypeState();
+    }
   };
 
   const getStatus = (testId: string) => {
@@ -179,7 +209,7 @@ const PsychologyPage = () => {
         icon: '🕓', 
         text: 'В процессе', 
         className: 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400',
-        time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : '10-20 мин'
+        time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : testId === 'stress' ? '15-25 мин' : '10-20 мин'
       };
     }
     if (testResults[testId]) {
@@ -187,14 +217,14 @@ const PsychologyPage = () => {
         icon: '✅', 
         text: 'Пройден', 
         className: 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
-        time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : '10-20 мин'
+        time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : testId === 'stress' ? '15-25 мин' : '10-20 мин'
       };
     }
     return { 
       icon: '⬜', 
       text: 'Не пройден', 
       className: 'text-gray-600 bg-gray-100 dark:bg-gray-700/30 dark:text-gray-400',
-      time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : '10-20 мин'
+      time: testId === 'big-five' ? '20-30 мин' : testId === 'archetypes' ? '25-35 мин' : testId === 'stress' ? '15-25 мин' : '10-20 мин'
     };
   };
 
@@ -203,7 +233,7 @@ const PsychologyPage = () => {
       'mbti': 'Тест MBTI',
       'big-five': 'Тест Big Five',
       'archetypes': 'Тест на архетипы (85 вопросов)',
-      'stress': 'Тест на стресс'
+      'stress': 'Тест на определение уровня стресса'
     };
 
     const testName = testNames[testId] || 'Психологический тест';
@@ -273,6 +303,15 @@ const PsychologyPage = () => {
         
         return `🎭 ${testName}\n\n✨ Мой ведущий архетип: ${archetypeName}\n\n🔹 Уровень выраженности: ${levelText}\n🔹 Баллы: ${topArchetype.score}/${topArchetype.maxScore} (${topArchetype.percentage}%)\n\n🔍 Прошел тест на платформе Протей!\n\n#Архетипы #Психология #Протей`;
       }
+    } else if (testId === 'stress' && typeof result === 'object' && result !== null && 'level' in result) {
+      // Для теста на стресс
+      const stressResult = result as StressResult;
+      const levelEmoji = stressResult.level === 'low' ? '🟢' :
+                        stressResult.level === 'moderate' ? '🟡' :
+                        stressResult.level === 'high' ? '🟠' :
+                        '🔴';
+      
+      return `🧠 ${testName}\n\n${levelEmoji} Мой уровень стресса: ${stressResult.levelName}\n\n🔹 Баллы: ${stressResult.score}/${stressResult.maxScore} (${stressResult.percentage}%)\n🔹 Описание: ${stressResult.description.split('\n')[0]}\n\n🔍 Прошел тест на платформе Протей!\n\n#Стресс #Психология #Протей`;
     }
     
     // Для других тестов
@@ -405,9 +444,36 @@ const PsychologyPage = () => {
         <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
           Психологические тесты
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-2 mb-6">
           Пройдите тесты для глубокого понимания своей личности
         </p>
+        
+        {/* Важное предупреждение */}
+        <motion.div
+          variants={cardAnimation}
+          initial="initial"
+          animate="animate"
+          className="bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl p-6 max-w-4xl mx-auto shadow-xl shadow-gray-200/50 dark:bg-gray-800/80 dark:border-gray-700/60 dark:shadow-gray-900/50"
+        >
+          <div className="flex items-start space-x-4">
+            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-3">
+                Важная информация
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-base">
+                Тесты помогают лучше узнать себя и задуматься о своих привычках, эмоциях и поведении. 
+                Но помните: это не диагноз, а лишь подсказка. Только психолог или психотерапевт может 
+                дать профессиональную интерпретацию и рекомендации. Если результаты вас тревожат или 
+                вызывают вопросы, лучше обсудить их со специалистом.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       <div className="space-y-6">
@@ -622,17 +688,6 @@ const PsychologyPage = () => {
                                   const sortedResults = [...result].sort((a: any, b: any) => b.score - a.score);
                                   const topArchetypes = sortedResults.slice(0, 3);
                                   
-                                  // Состояние для разворачивания/сворачивания описаний
-                                  const [expandedArchetypes, setExpandedArchetypes] = useState<string[]>([]);
-                                  
-                                  const toggleArchetype = (archetypeId: string) => {
-                                    setExpandedArchetypes(prev => 
-                                      prev.includes(archetypeId) 
-                                        ? prev.filter(id => id !== archetypeId)
-                                        : [...prev, archetypeId]
-                                    );
-                                  };
-                                  
                                   return (
                                     <div className="space-y-4">
                                       <div className="text-center mb-4">
@@ -788,6 +843,81 @@ const PsychologyPage = () => {
                                             )}
                                           </div>
                                         ))}
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  // Fallback к текстовому отображению
+                                  return (
+                                    <div 
+                                      className="prose prose-sm max-w-none dark:prose-invert text-foreground"
+                                      dangerouslySetInnerHTML={{
+                                        __html: (testResults[test.id] as string)
+                                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                          .replace(/\n/g, '<br/>')
+                                      }}
+                                    />
+                                  );
+                                }
+                              })()
+                            ) : test.id === 'stress' ? (
+                              (() => {
+                                const result = testResults[test.id];
+                                if (typeof result === 'object' && result !== null && 'level' in result) {
+                                  // У нас есть результат теста на стресс
+                                  const stressResult = result as StressResult;
+                                  
+                                  return (
+                                    <div className="space-y-4">
+                                      <div className="text-center mb-4">
+                                        <h4 className="text-lg font-semibold mb-2">🧠 Результаты теста на стресс</h4>
+                                      </div>
+                                      
+                                      {/* Основной результат */}
+                                      <div className="text-center space-y-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+                                        <div className={`inline-flex items-center px-6 py-3 rounded-full text-xl font-bold shadow-lg ${
+                                          stressResult.level === 'low' ? 'bg-green-500' :
+                                          stressResult.level === 'moderate' ? 'bg-yellow-500' :
+                                          stressResult.level === 'high' ? 'bg-orange-500' :
+                                          'bg-red-500'
+                                        } text-white`}>
+                                          {stressResult.levelName}
+                                        </div>
+                                        
+                                        <div className="text-2xl font-bold text-gray-800">
+                                          {stressResult.score} / {stressResult.maxScore} баллов
+                                        </div>
+                                        
+                                        <div className="text-lg text-gray-600">
+                                          {stressResult.percentage}% от максимального значения
+                                        </div>
+                                        
+                                        <Progress value={stressResult.percentage} className="h-3" />
+                                      </div>
+
+                                      {/* Подробное описание */}
+                                      <div className="bg-white rounded-lg p-6 border-l-4 border-blue-500 shadow-lg">
+                                        <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                                          📋 Подробная интерпретация
+                                        </h3>
+                                        <div className="prose prose-lg max-w-none">
+                                          <div 
+                                            className="text-gray-700 leading-relaxed whitespace-pre-line"
+                                            dangerouslySetInnerHTML={{ 
+                                              __html: stressResult.description.replace(/\n/g, '<br/>') 
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* Рекомендации */}
+                                      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border-l-4 border-green-500 shadow-lg">
+                                        <h3 className="text-xl font-semibold text-green-800 mb-4">
+                                          💡 Рекомендации
+                                        </h3>
+                                        <p className="text-green-700 leading-relaxed">
+                                          {stressResult.recommendations}
+                                        </p>
                                       </div>
                                     </div>
                                   );
