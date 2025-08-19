@@ -48,17 +48,15 @@ export function Layout() {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop sidebar - hidden on mobile */}
+      {/* Desktop sidebar - скрыт на мобильных */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
       
-      {/* Mobile sidebar - shown only on mobile */}
-      <div className="md:hidden">
-        <MobileSidebar />
-      </div>
+      {/* Mobile sidebar - показан только на мобильных */}
+      <MobileSidebar />
       
-      <main className="flex-1 overflow-y-auto p-4 md:p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-16 md:pt-4">
         <Outlet context={{ messages, setMessages }} />
       </main>
       <Toaster />

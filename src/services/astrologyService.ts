@@ -166,6 +166,7 @@ export const calculateNatalChart = async (birthData: BirthData, city: City): Pro
     }
     
     const cusps = housesData.cusps;
+    const ascmc = housesData.ascmc;
 
     const planetsToCalc = [
       { id: swe.SE_SUN, name: 'Солнце' },
