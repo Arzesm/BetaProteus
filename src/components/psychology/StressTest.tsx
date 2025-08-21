@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -23,6 +24,7 @@ const cardHover = {
 };
 
 const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ onComplete }) => {
+  const navigate = useNavigate();
   // Все хуки в начале компонента
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -250,7 +252,7 @@ ${recommendations}`;
                   localStorage.setItem('proteusChatTestId', 'stress');
                   
                   // Перенаправляем на страницу чата
-                  window.location.href = '/chat';
+                  navigate('/chat');
                   
                 } catch (error) {
                   console.error('Error preparing chat message:', error);
@@ -299,27 +301,27 @@ ${recommendations}`;
                         // Создаем полное сообщение для Протея
                         const fullMessage = `Привет, Протей! Я только что прошел тест на стресс и хочу обсудить результаты. Вот что получилось:\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
                         
-                        // Сохраняем сообщение в localStorage для передачи в чат
-                        localStorage.setItem('proteusChatMessage', fullMessage);
-                        localStorage.setItem('proteusChatSource', 'stress-test');
-                        localStorage.setItem('proteusChatTestId', 'stress');
-                        
-                        // Перенаправляем на страницу чата
-                        window.location.href = '/chat';
-                        
-                      } catch (error) {
-                        console.error('Error preparing chat message:', error);
-                        alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
-                      }
-                    }}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                      <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
-                    </svg>
-                    Поговорить с Протеем
-                  </Button>
+                                          // Сохраняем сообщение в localStorage для передачи в чат
+                  localStorage.setItem('proteusChatMessage', fullMessage);
+                  localStorage.setItem('proteusChatSource', 'stress-test');
+                  localStorage.setItem('proteusChatTestId', 'stress');
+                  
+                  // Перенаправляем на страницу чата
+                  navigate('/chat');
+                  
+                } catch (error) {
+                  console.error('Error preparing chat message:', error);
+                  alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+              </svg>
+              Поговорить с Протеем
+            </Button>
               </div>
             </CardContent>
           </Card>

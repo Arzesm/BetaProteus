@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +17,7 @@ interface BigFiveTestProps {
 }
 
 export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
+  const navigate = useNavigate();
   // Все хуки в начале компонента
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: number }>({});
@@ -280,7 +282,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                   localStorage.setItem('proteusChatTestId', 'bigFive');
                   
                   // Перенаправляем на страницу чата
-                  window.location.href = '/chat';
+                  navigate('/chat');
                   
                 } catch (error) {
                   console.error('Error preparing chat message:', error);
@@ -330,7 +332,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                   localStorage.setItem('proteusChatTestId', 'bigFive');
                   
                   // Перенаправляем на страницу чата
-                  window.location.href = '/chat';
+                  navigate('/chat');
                   
                 } catch (error) {
                   console.error('Error preparing chat message:', error);

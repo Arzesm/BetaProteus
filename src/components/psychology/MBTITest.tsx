@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ interface MBTIResult {
 type MbtiScores = { E: number; I: number; S: number; N: number; T: number; F: number; J: number; P: number };
 
 export function MBTITest({ onComplete, forceResult }: { onComplete: (result: string | { type: string; scores: MbtiScores }) => void; forceResult?: { type: string; scores?: MbtiScores } }) {
+  const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [testState, setTestState] = useState<'testing' | 'completed'>('testing');
@@ -1565,7 +1567,7 @@ ${fullDescription}`;
                     localStorage.setItem('proteusChatTestId', 'mbti');
                     
                     // Перенаправляем на страницу чата
-                    window.location.href = '/chat';
+                    navigate('/chat');
                     
                   } catch (error) {
                     console.error('Error preparing chat message:', error);

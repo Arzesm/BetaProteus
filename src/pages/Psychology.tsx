@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -23,6 +24,7 @@ type TestComponent = React.ComponentType<{
 }>;
 
 const PsychologyPage = () => {
+  const navigate = useNavigate();
   const [activeTest, setActiveTest] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, string | { type: string; scores: MbtiScores } | BigFiveResult[] | ArchetypeResult[] | StressResult>>(() => {
     try {
@@ -805,7 +807,7 @@ ${recommendations}`;
       localStorage.setItem('proteusChatTestId', testId);
       
       // Перенаправляем на страницу чата
-      window.location.href = '/chat';
+      navigate('/chat');
       
     } catch (error) {
       console.error('Error preparing chat message:', error);
