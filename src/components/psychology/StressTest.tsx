@@ -49,6 +49,18 @@ const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ 
     }
   };
 
+  const goToPreviousQuestion = () => {
+    if (currentQuestion > 1) {
+      setCurrentQuestion(prev => prev - 1);
+      // Удаляем ответ при возврате назад
+      setAnswers(prev => {
+        const newAnswers = { ...prev };
+        delete newAnswers[currentQuestion];
+        return newAnswers;
+      });
+    }
+  };
+
   const finishTest = () => {
     const calculatedResults = calculateStressResults(answers);
     setResults(calculatedResults);
@@ -399,6 +411,22 @@ ${recommendations}`;
                       </Button>
                     </motion.div>
                   ))}
+                </div>
+
+                {/* Кнопки навигации */}
+                <div className="flex gap-3 pt-6">
+                  <Button
+                    variant="outline"
+                    onClick={goToPreviousQuestion}
+                    disabled={currentQuestion === 1}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 border-gray-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Назад
+                  </Button>
+                  <div className="flex-1" /> {/* Spacer */}
                 </div>
               </CardContent>
             </Card>

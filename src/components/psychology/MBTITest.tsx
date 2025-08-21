@@ -43,6 +43,15 @@ export function MBTITest({ onComplete, forceResult }: { onComplete: (result: str
     }
   };
 
+  const goToPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      // Удаляем последний ответ при возврате назад
+      const newAnswers = answers.slice(0, -1);
+      setAnswers(newAnswers);
+    }
+  };
+
   const calculateResult = (finalAnswers: number[]) => {
     // Разделяем ответы по дихотомиям
     const eIAnswers = finalAnswers.slice(0, 23); // вопросы 1-23
@@ -1619,6 +1628,22 @@ ${fullDescription}`;
               {option.text}
             </Button>
           ))}
+        </div>
+
+        {/* Кнопки навигации */}
+        <div className="flex gap-3 pt-4">
+          <Button
+            variant="outline"
+            onClick={goToPreviousQuestion}
+            disabled={currentQuestionIndex === 0}
+            className="flex-1"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
+          </Button>
+          <div className="flex-1" /> {/* Spacer */}
         </div>
       </CardContent>
     </Card>
