@@ -201,14 +201,125 @@ const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ 
                 </div>
               )}
 
-              {/* Кнопка повторного прохождения */}
-              <div className="text-center">
+              {/* Кнопки действий */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   onClick={resetTest}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300 flex-1"
                 >
                   Пройти тест заново
                 </Button>
+                            <Button 
+              variant="default" 
+              onClick={() => {
+                try {
+                  // Формируем сообщение с результатом теста на стресс
+                  const levelNames: Record<string, string> = {
+                    'low': 'Низкий',
+                    'moderate': 'Умеренный',
+                    'high': 'Высокий',
+                    'very_high': 'Очень высокий'
+                  };
+                  
+                  const levelName = levelNames[results?.level] || results?.level;
+                  const score = results?.score || 0;
+                  const percentage = results?.percentage || 0;
+                  const description = results?.description || 'Описание недоступно';
+                  const recommendations = results?.recommendations || 'Рекомендации недоступны';
+                  
+                  const resultText = `# 😰 Результат теста на стресс
+
+## Уровень стресса
+**${levelName}**
+
+## Баллы
+**${score}/160** (${percentage}%)
+
+## 📋 Описание
+${description}
+
+## 💡 Рекомендации
+${recommendations}`;
+                  
+                  // Создаем полное сообщение для Протея
+                  const fullMessage = `Привет, Протей! Я только что прошел тест на стресс и хочу обсудить результаты. Вот что получилось:\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                  
+                  // Сохраняем сообщение в localStorage для передачи в чат
+                  localStorage.setItem('proteusChatMessage', fullMessage);
+                  localStorage.setItem('proteusChatSource', 'stress-test');
+                  localStorage.setItem('proteusChatTestId', 'stress');
+                  
+                  // Перенаправляем на страницу чата
+                  window.location.href = '/chat';
+                  
+                } catch (error) {
+                  console.error('Error preparing chat message:', error);
+                  alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+              </svg>
+              Поделиться
+            </Button>
+                                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      try {
+                        // Формируем сообщение с результатом теста на стресс
+                        const levelNames: Record<string, string> = {
+                          'low': 'Низкий',
+                          'moderate': 'Умеренный',
+                          'high': 'Высокий',
+                          'very_high': 'Очень высокий'
+                        };
+                        
+                        const levelName = levelNames[results?.level] || results?.level;
+                        const score = results?.score || 0;
+                        const percentage = results?.percentage || 0;
+                        const description = results?.description || 'Описание недоступно';
+                        const recommendations = results?.recommendations || 'Рекомендации недоступны';
+                        
+                        const resultText = `# 😰 Результат теста на стресс
+
+## Уровень стресса
+**${levelName}**
+
+## Баллы
+**${score}/160** (${percentage}%)
+
+## 📋 Описание
+${description}
+
+## 💡 Рекомендации
+${recommendations}`;
+                        
+                        // Создаем полное сообщение для Протея
+                        const fullMessage = `Привет, Протей! Я только что прошел тест на стресс и хочу обсудить результаты. Вот что получилось:\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                        
+                        // Сохраняем сообщение в localStorage для передачи в чат
+                        localStorage.setItem('proteusChatMessage', fullMessage);
+                        localStorage.setItem('proteusChatSource', 'stress-test');
+                        localStorage.setItem('proteusChatTestId', 'stress');
+                        
+                        // Перенаправляем на страницу чата
+                        window.location.href = '/chat';
+                        
+                      } catch (error) {
+                        console.error('Error preparing chat message:', error);
+                        alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                      }
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                      <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                    </svg>
+                    Поговорить с Протеем
+                  </Button>
               </div>
             </CardContent>
           </Card>

@@ -580,6 +580,239 @@ const PsychologyPage = () => {
     }
   };
 
+  const getTestName = (testId: string): string => {
+    switch (testId) {
+      case 'mbti':
+        return 'MBTI (Тип личности)';
+      case 'bigFive':
+        return 'Big Five (Пять факторов личности)';
+      case 'archetype':
+        return 'Архетипы личности';
+      case 'stress':
+        return 'Тест на стресс';
+      default:
+        return 'Психологический тест';
+    }
+  };
+
+  const formatResultForChat = (testId: string, result: any): string => {
+    // Добавляем отладочную информацию
+    console.log(`Formatting result for test ${testId}:`, result);
+    console.log(`Result type:`, typeof result);
+    console.log(`Result is array:`, Array.isArray(result));
+    
+    try {
+      switch (testId) {
+        case 'mbti':
+          if (typeof result === 'object' && result !== null && result.scores) {
+            const scores = result.scores;
+            const mbtiTitles: Record<string, string> = {
+              'INTJ': 'Архитектор', 'INTP': 'Логик', 'ENTJ': 'Командир', 'ENTP': 'Новатор',
+              'INFJ': 'Адвокат', 'INFP': 'Посредник', 'ENFJ': 'Протагонист', 'ENFP': 'Активист',
+              'ISTJ': 'Логист', 'ISFJ': 'Защитник', 'ESTJ': 'Исполнитель', 'ESFJ': 'Консул',
+              'ISTP': 'Виртуоз', 'ISFP': 'Авантюрист', 'ESTP': 'Предприниматель', 'ESFP': 'Развлекатель'
+            };
+            
+            const title = mbtiTitles[result.type] || result.type;
+            
+            return `# 🎯 Результат теста MBTI
+
+## Тип личности
+**${title}** (${result.type})
+
+## Баллы по шкалам
+- **E-I** (Экстраверсия-Интроверсия): ${scores.E || 0} - ${scores.I || 0}
+- **S-N** (Сенсорика-Интуиция): ${scores.S || 0} - ${scores.N || 0}
+- **T-F** (Мышление-Чувство): ${scores.T || 0} - ${scores.F || 0}
+- **J-P** (Суждение-Восприятие): ${scores.J || 0} - ${scores.P || 0}`;
+          } else if (typeof result === 'string') {
+            return `🎯 **Результат MBTI:** ${result}`;
+          } else {
+            return `🎯 **Результат MBTI:** ${JSON.stringify(result, null, 2)}`;
+          }
+          
+        case 'bigFive':
+          if (Array.isArray(result) && result.length > 0) {
+            const factors = result.map(factor => {
+              if (typeof factor === 'object' && factor !== null) {
+                const factorNames: Record<string, string> = {
+                  'openness': 'Открытость к опыту',
+                  'conscientiousness': 'Добросовестность',
+                  'extraversion': 'Экстраверсия',
+                  'agreeableness': 'Доброжелательность',
+                  'neuroticism': 'Нейротизм'
+                };
+                
+                const levelNames: Record<string, string> = {
+                  'very_low': 'Очень низкий',
+                  'low': 'Низкий',
+                  'average': 'Средний',
+                  'high': 'Высокий',
+                  'very_high': 'Очень высокий'
+                };
+                
+                const factorName = factorNames[factor.factor] || factor.factor;
+                const levelName = levelNames[factor.level] || factor.level;
+                
+                return `• **${factorName}:** ${factor.score || 0}/100 (${levelName})`;
+              } else {
+                return `• **Фактор:** ${factor}`;
+              }
+            }).join('\n');
+            
+            return `# 🧠 Результаты теста Big Five
+
+## Пять факторов личности
+
+${factors}`;
+          } else if (typeof result === 'string') {
+            return `🧠 **Результат Big Five:** ${result}`;
+          } else {
+            return `🧠 **Результат Big Five:** ${JSON.stringify(result, null, 2)}`;
+          }
+          
+        case 'archetype':
+          if (Array.isArray(result) && result.length > 0) {
+            const archetypeNames: Record<string, string> = {
+              'innocent': 'Невинный',
+              'everyman': 'Обыватель',
+              'hero': 'Герой',
+              'caregiver': 'Заботливый',
+              'explorer': 'Искатель',
+              'rebel': 'Бунтарь',
+              'lover': 'Любовник',
+              'creator': 'Творец',
+              'jester': 'Шут',
+              'sage': 'Мудрец',
+              'magician': 'Маг',
+              'ruler': 'Правитель'
+            };
+            
+            const levelNames: Record<string, string> = {
+              'weak': 'Слабый',
+              'moderate': 'Умеренный',
+              'strong': 'Сильный',
+              'very_strong': 'Очень сильный'
+            };
+            
+            const topArchetypes = result.slice(0, 3).map((archetype, index) => {
+              if (typeof archetype === 'object' && archetype !== null) {
+                const archetypeName = archetypeNames[archetype.archetype] || archetype.archetype;
+                const levelName = levelNames[archetype.level] || archetype.level;
+                const score = archetype.score || 0;
+                
+                return `${index + 1}. **${archetypeName}** - ${levelName} (${score} баллов)`;
+              } else {
+                return `${index + 1}. **Архетип:** ${archetype}`;
+              }
+            }).join('\n');
+            
+            return `# 👑 Результаты теста на архетипы
+
+## Мои ведущие архетипы
+
+${topArchetypes}`;
+          } else if (typeof result === 'string') {
+            return `👑 **Результат архетипов:** ${result}`;
+          } else {
+            return `👑 **Результат архетипов:** ${JSON.stringify(result, null, 2)}`;
+          }
+          
+        case 'stress':
+          if (typeof result === 'object' && result !== null && result.level) {
+            const levelNames: Record<string, string> = {
+              'low': 'Низкий',
+              'moderate': 'Умеренный',
+              'high': 'Высокий',
+              'very_high': 'Очень высокий'
+            };
+            
+            const levelName = levelNames[result.level] || result.level;
+            const score = result.score || 0;
+            const percentage = result.percentage || 0;
+            const description = result.description || 'Описание недоступно';
+            const recommendations = result.recommendations || 'Рекомендации недоступны';
+            
+            return `# 😰 Результат теста на стресс
+
+## Уровень стресса
+**${levelName}**
+
+## Баллы
+**${score}/160** (${percentage}%)
+
+## 📋 Описание
+${description}
+
+## 💡 Рекомендации
+${recommendations}`;
+          } else if (typeof result === 'string') {
+            return `😰 **Результат теста на стресс:** ${result}`;
+          } else {
+            return `😰 **Результат теста на стресс:** ${JSON.stringify(result, null, 2)}`;
+          }
+          
+        default:
+          if (typeof result === 'string') {
+            return `📊 **Результат теста:** ${result}`;
+          } else if (typeof result === 'object' && result !== null) {
+            return `📊 **Результат теста:** ${JSON.stringify(result, null, 2)}`;
+          } else {
+            return `📊 **Результат теста:** ${String(result)}`;
+          }
+      }
+    } catch (error) {
+      console.error(`Error formatting result for test ${testId}:`, error);
+      return `❌ **Ошибка при форматировании результата теста ${testId}**\n\nРезультат: ${JSON.stringify(result, null, 2)}`;
+    }
+  };
+
+  const handleTalkToProteus = async (testId: string, result: any) => {
+    try {
+      // Добавляем отладочную информацию
+      console.log(`Preparing chat message for test ${testId}:`, result);
+      console.log(`Result type:`, typeof result);
+      console.log(`Result structure:`, result);
+      
+      // Проверяем, что результат не undefined или null
+      if (result === undefined || result === null) {
+        console.error(`Result for test ${testId} is undefined or null`);
+        alert('Результат теста не найден. Попробуйте пройти тест заново.');
+        return;
+      }
+      
+      // Формируем сообщение с результатом теста
+      const testName = getTestName(testId);
+      const resultText = formatResultForChat(testId, result);
+      
+      console.log(`Formatted result text:`, resultText);
+      
+      // Проверяем, что результат не пустой
+      if (!resultText || resultText.trim() === '') {
+        console.error(`Formatted result text is empty for test ${testId}`);
+        alert('Не удалось сформировать результат теста. Попробуйте еще раз.');
+        return;
+      }
+      
+      // Создаем полное сообщение для Протея
+      const fullMessage = `Привет, Протей! Я только что прошел тест "${testName}" и хочу обсудить результаты. Вот что получилось:\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+      
+      console.log(`Full message for Proteus:`, fullMessage);
+      
+      // Сохраняем сообщение в localStorage для передачи в чат
+      localStorage.setItem('proteusChatMessage', fullMessage);
+      localStorage.setItem('proteusChatSource', 'psychology-test');
+      localStorage.setItem('proteusChatTestId', testId);
+      
+      // Перенаправляем на страницу чата
+      window.location.href = '/chat';
+      
+    } catch (error) {
+      console.error('Error preparing chat message:', error);
+      alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+    }
+  };
+
   return (
     <motion.div
       variants={pageAnimation}
@@ -1113,6 +1346,17 @@ const PsychologyPage = () => {
                                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                               </svg>
                               Поделиться
+                            </Button>
+                            <Button 
+                              variant="secondary" 
+                              onClick={() => handleTalkToProteus(test.id, testResults[test.id])}
+                              className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+                            >
+                              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                                <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                              </svg>
+                              Поговорить с Протеем
                             </Button>
                           </div>
                         </div>

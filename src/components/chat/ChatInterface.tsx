@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { Message } from '@/components/layout/Layout';
 import { supabase } from '@/integrations/supabase/client';
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -18,6 +20,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ messages, setMessages }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAutoSending, setIsAutoSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +68,90 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
     }
   };
 
+  // Проверяем localStorage для автоматической отправки сообщения с результатом теста
+  useEffect(() => {
+    const proteusChatMessage = localStorage.getItem('proteusChatMessage');
+    const proteusChatSource = localStorage.getItem('proteusChatSource');
+    const proteusChatTestId = localStorage.getItem('proteusChatTestId');
+    
+    console.log('ChatInterface: Checking localStorage for test results...');
+    console.log('proteusChatMessage:', proteusChatMessage);
+    console.log('proteusChatSource:', proteusChatSource);
+    console.log('proteusChatTestId:', proteusChatTestId);
+    
+    if (proteusChatMessage && proteusChatSource && proteusChatTestId) {
+      console.log('ChatInterface: Found test results, preparing to send...');
+      
+      // Показываем уведомление о том, что результат теста автоматически отправляется
+      toast.success("Результат теста автоматически отправлен Протею!", {
+        description: "Протей анализирует ваши результаты и готовит ответ..."
+      });
+      
+      // Автоматически отправляем сообщение с результатом теста
+      const userMessage: Message = { role: 'user', content: proteusChatMessage };
+      const newMessages = [...messages, userMessage];
+      setMessages(newMessages);
+      
+      console.log('ChatInterface: User message created:', userMessage);
+      console.log('ChatInterface: New messages array:', newMessages);
+      
+      // Очищаем localStorage
+      localStorage.removeItem('proteusChatMessage');
+      localStorage.removeItem('proteusChatSource');
+      localStorage.removeItem('proteusChatTestId');
+      
+      // Автоматически отправляем сообщение Протею
+      sendMessageToProteus(newMessages);
+    } else {
+      console.log('ChatInterface: No test results found in localStorage');
+    }
+  }, []); // Запускаем только при монтировании компонента
+
+  // Функция для отправки сообщения Протею
+  const sendMessageToProteus = async (messagesToSend: Message[]) => {
+    console.log('ChatInterface: sendMessageToProteus called with messages:', messagesToSend);
+    setIsAutoSending(true);
+    setIsLoading(true);
+    
+    try {
+      console.log('ChatInterface: Sending messages to Proteus:', messagesToSend.slice(-10));
+      
+      const { data, error } = await supabase.functions.invoke('chat', {
+        body: { messages: messagesToSend.slice(-10) }, // Отправляем последние 10 сообщений для контекста
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('ChatInterface: Received response from Proteus:', data);
+      const assistantMessage: Message = { role: 'assistant', content: data.reply };
+      setMessages(prev => [...prev, assistantMessage]);
+
+    } catch (error: any) {
+      console.error("Ошибка при автоматической отправке сообщения:", error);
+      let errorDescription = error.message;
+
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errorJson = await error.context.json();
+          if (errorJson.error) {
+            errorDescription = errorJson.error;
+          }
+        } catch {
+          // Ignore if the error response is not JSON
+        }
+      }
+      
+      toast.error("Не удалось получить ответ от Протея.", { description: errorDescription });
+      const assistantErrorMessage: Message = { role: 'assistant', content: `Произошла ошибка: ${errorDescription}` };
+      setMessages(prev => [...prev, assistantErrorMessage]);
+    } finally {
+      setIsLoading(false);
+      setIsAutoSending(false);
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -88,7 +175,32 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-accent text-accent-foreground'
                 }`}>
-                  {msg.content}
+                  {msg.role === 'assistant' ? (
+                    <div className="chat-markdown">
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          // Кастомизируем стили для Markdown элементов
+                          h1: ({node, ...props}) => <h1 {...props} />,
+                          h2: ({node, ...props}) => <h2 {...props} />,
+                          h3: ({node, ...props}) => <h3 {...props} />,
+                          p: ({node, ...props}) => <p {...props} />,
+                          ul: ({node, ...props}) => <ul {...props} />,
+                          ol: ({node, ...props}) => <ol {...props} />,
+                          li: ({node, ...props}) => <li {...props} />,
+                          strong: ({node, ...props}) => <strong {...props} />,
+                          em: ({node, ...props}) => <em {...props} />,
+                          code: ({node, ...props}) => <code {...props} />,
+                          blockquote: ({node, ...props}) => <blockquote {...props} />,
+                          hr: ({node, ...props}) => <hr {...props} />
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <span className="whitespace-pre-wrap">{msg.content}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -100,10 +212,17 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
                   <AvatarImage src="https://i.postimg.cc/vHrZz2G8/image.png" />
                 </Avatar>
                 <div className="px-4 py-2 rounded-lg bg-accent text-accent-foreground">
-                  <div className="flex items-center space-x-1">
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.3s]"></span>
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.15s]"></span>
-                    <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse"></span>
+                  <div className="flex items-center space-x-2">
+                    {isAutoSending && (
+                      <span className="text-xs text-muted-foreground">
+                        {isAutoSending ? "🤖 Протей анализирует результаты теста..." : "Протей печатает..."}
+                      </span>
+                    )}
+                    <div className="flex items-center space-x-1">
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.3s]"></span>
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse [animation-delay:-0.15s]"></span>
+                      <span className="h-2 w-2 bg-muted-foreground rounded-full animate-pulse"></span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1427,7 +1427,7 @@ export function MBTITest({ onComplete, forceResult }: { onComplete: (result: str
 
           {!forceResult && (
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={resetTest} variant="outline">
+              <Button onClick={resetTest} variant="outline" className="flex-1">
                 Пройти тест заново
               </Button>
               <Button 
@@ -1533,6 +1533,52 @@ export function MBTITest({ onComplete, forceResult }: { onComplete: (result: str
                   <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                 </svg>
                 Поделиться
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  try {
+                    // Формируем сообщение с результатом теста MBTI
+                    const mbtiTitles: Record<string, string> = {
+                      'INTJ': 'Архитектор', 'INTP': 'Логик', 'ENTJ': 'Командир', 'ENTP': 'Новатор',
+                      'INFJ': 'Адвокат', 'INFP': 'Посредник', 'ENFJ': 'Протагонист', 'ENFP': 'Активист',
+                      'ISTJ': 'Логист', 'ISFJ': 'Защитник', 'ESTJ': 'Исполнитель', 'ESFJ': 'Консул',
+                      'ISTP': 'Виртуоз', 'ISFP': 'Авантюрист', 'ESTP': 'Предприниматель', 'ESFP': 'Развлекатель'
+                    };
+                    
+                    const title = mbtiTitles[displayType] || displayType;
+                    const fullDescription = generateFullMbtiDescription(displayType, title);
+                    const resultText = `# 🎯 Результат теста MBTI
+
+## Тип личности
+**${title}** (${displayType})
+
+## 📖 Подробное описание
+${fullDescription}`;
+                    
+                    // Создаем полное сообщение для Протея
+                    const fullMessage = `Привет, Протей! Я только что прошел тест MBTI и хочу обсудить результаты. Вот что получилось:\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                    
+                    // Сохраняем сообщение в localStorage для передачи в чат
+                    localStorage.setItem('proteusChatMessage', fullMessage);
+                    localStorage.setItem('proteusChatSource', 'mbti-test');
+                    localStorage.setItem('proteusChatTestId', 'mbti');
+                    
+                    // Перенаправляем на страницу чата
+                    window.location.href = '/chat';
+                    
+                  } catch (error) {
+                    console.error('Error preparing chat message:', error);
+                    alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                  }
+                }}
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+              >
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                  <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                </svg>
+                Поговорить с Протеем
               </Button>
             </div>
           )}

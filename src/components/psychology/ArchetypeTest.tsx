@@ -330,11 +330,11 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                 </div>
               )}
 
-              <div className="flex justify-center space-x-4">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button 
                   onClick={() => setShowFullProfile(!showFullProfile)} 
                   variant="outline"
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 flex-1"
                 >
                   {showFullProfile ? (
                     <>
@@ -348,9 +348,126 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                 </Button>
                 <Button 
                   onClick={restartTest} 
-                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300"
+                  className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold text-lg px-8 py-3 shadow-lg transform hover:scale-105 transition-all duration-300 flex-1"
                 >
                   🔄 Пройти тест заново 🔄
+                </Button>
+                <Button 
+                  variant="default" 
+                  onClick={() => {
+                    try {
+                      // Формируем сообщение с результатом теста архетипов
+                      const archetypeNames: Record<string, string> = {
+                        'innocent': 'Невинный',
+                        'everyman': 'Обыватель',
+                        'hero': 'Герой',
+                        'caregiver': 'Заботливый',
+                        'explorer': 'Искатель',
+                        'rebel': 'Бунтарь',
+                        'lover': 'Любовник',
+                        'creator': 'Творец',
+                        'jester': 'Шут',
+                        'sage': 'Мудрец',
+                        'magician': 'Маг',
+                        'ruler': 'Правитель'
+                      };
+                      
+                      const levelNames: Record<string, string> = {
+                        'weak': 'Слабый',
+                        'moderate': 'Умеренный',
+                        'strong': 'Сильный',
+                        'very_strong': 'Очень сильный'
+                      };
+                      
+                      const topArchetypes = results.slice(0, 3).map((archetype, index) => {
+                        const archetypeName = archetypeNames[archetype.archetype] || archetype.archetype;
+                        const levelName = levelNames[archetype.level] || archetype.level;
+                        const score = archetype.score || 0;
+                        
+                        return `${index + 1}. **${archetypeName}** - ${levelName} (${score} баллов)`;
+                      }).join('\n');
+                      
+                      // Создаем полное сообщение для Протея
+                      const fullMessage = `Привет, Протей! Я только что прошел тест на архетипы и хочу обсудить результаты. Вот что получилось:\n\n# 👑 Результаты теста на архетипы\n\n## Мои ведущие архетипы\n\n${topArchetypes}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                      
+                      // Сохраняем сообщение в localStorage для передачи в чат
+                      localStorage.setItem('proteusChatMessage', fullMessage);
+                      localStorage.setItem('proteusChatSource', 'archetype-test');
+                      localStorage.setItem('proteusChatTestId', 'archetype');
+                      
+                      // Перенаправляем на страницу чата
+                      window.location.href = '/chat';
+                      
+                    } catch (error) {
+                      console.error('Error preparing chat message:', error);
+                      alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                    }
+                  }}
+                  className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                  </svg>
+                  Поделиться
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    try {
+                      // Формируем сообщение с результатом теста архетипов
+                      const archetypeNames: Record<string, string> = {
+                        'innocent': 'Невинный',
+                        'everyman': 'Обыватель',
+                        'hero': 'Герой',
+                        'caregiver': 'Заботливый',
+                        'explorer': 'Искатель',
+                        'rebel': 'Бунтарь',
+                        'lover': 'Любовник',
+                        'creator': 'Творец',
+                        'jester': 'Шут',
+                        'sage': 'Мудрец',
+                        'magician': 'Маг',
+                        'ruler': 'Правитель'
+                      };
+                      
+                      const levelNames: Record<string, string> = {
+                        'weak': 'Слабый',
+                        'moderate': 'Умеренный',
+                        'strong': 'Сильный',
+                        'very_strong': 'Очень сильный'
+                      };
+                      
+                      const topArchetypes = results.slice(0, 3).map((archetype, index) => {
+                        const archetypeName = archetypeNames[archetype.archetype] || archetype.archetype;
+                        const levelName = levelNames[archetype.level] || archetype.level;
+                        const score = archetype.score || 0;
+                        
+                        return `${index + 1}. **${archetypeName}** - ${levelName} (${score} баллов)`;
+                      }).join('\n');
+                      
+                      // Создаем полное сообщение для Протея
+                      const fullMessage = `Привет, Протей! Я только что прошел тест на архетипы и хочу обсудить результаты. Вот что получилось:\n\n# 👑 Результаты теста на архетипы\n\n## Мои ведущие архетипы\n\n${topArchetypes}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                      
+                      // Сохраняем сообщение в localStorage для передачи в чат
+                      localStorage.setItem('proteusChatMessage', fullMessage);
+                      localStorage.setItem('proteusChatSource', 'archetype-test');
+                      localStorage.setItem('proteusChatTestId', 'archetype');
+                      
+                      // Перенаправляем на страницу чата
+                      window.location.href = '/chat';
+                      
+                    } catch (error) {
+                      console.error('Error preparing chat message:', error);
+                      alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                    }
+                  }}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                    <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                  </svg>
+                  Поговорить с Протеем
                 </Button>
               </div>
             </CardContent>

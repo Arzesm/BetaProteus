@@ -240,9 +240,110 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
             ))}
           </div>
           
-          <div className="flex justify-center space-x-4">
-            <Button onClick={restartTest} variant="outline">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button onClick={restartTest} variant="outline" className="flex-1">
               Пройти тест заново
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={() => {
+                try {
+                  // Формируем сообщение с результатом теста Big Five
+                  const factorNames: Record<string, string> = {
+                    'openness': 'Открытость к опыту',
+                    'conscientiousness': 'Добросовестность',
+                    'extraversion': 'Экстраверсия',
+                    'agreeableness': 'Доброжелательность',
+                    'neuroticism': 'Нейротизм'
+                  };
+                  
+                  const levelNames: Record<string, string> = {
+                    'very_low': 'Очень низкий',
+                    'low': 'Низкий',
+                    'average': 'Средний',
+                    'high': 'Высокий',
+                    'very_high': 'Очень высокий'
+                  };
+                  
+                  const resultText = results.map(result => {
+                    const factorName = factorNames[result.factor] || result.factor;
+                    const levelName = levelNames[result.level] || result.level;
+                    return `• **${factorName}:** ${result.score}/100 (${levelName})`;
+                  }).join('\n');
+                  
+                  // Создаем полное сообщение для Протея
+                  const fullMessage = `Привет, Протей! Я только что прошел тест Big Five и хочу обсудить результаты. Вот что получилось:\n\n# 🧠 Результаты теста Big Five\n\n## Пять факторов личности\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                  
+                  // Сохраняем сообщение в localStorage для передачи в чат
+                  localStorage.setItem('proteusChatMessage', fullMessage);
+                  localStorage.setItem('proteusChatSource', 'bigfive-test');
+                  localStorage.setItem('proteusChatTestId', 'bigFive');
+                  
+                  // Перенаправляем на страницу чата
+                  window.location.href = '/chat';
+                  
+                } catch (error) {
+                  console.error('Error preparing chat message:', error);
+                  alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+              </svg>
+              Поделиться
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                try {
+                  // Формируем сообщение с результатом теста Big Five
+                  const factorNames: Record<string, string> = {
+                    'openness': 'Открытость к опыту',
+                    'conscientiousness': 'Добросовестность',
+                    'extraversion': 'Экстраверсия',
+                    'agreeableness': 'Доброжелательность',
+                    'neuroticism': 'Нейротизм'
+                  };
+                  
+                  const levelNames: Record<string, string> = {
+                    'very_low': 'Очень низкий',
+                    'low': 'Низкий',
+                    'average': 'Средний',
+                    'high': 'Высокий',
+                    'very_high': 'Очень высокий'
+                  };
+                  
+                  const resultText = results.map(result => {
+                    const factorName = factorNames[result.factor] || result.factor;
+                    const levelName = levelNames[result.level] || result.level;
+                    return `• **${factorName}:** ${result.score}/100 (${levelName})`;
+                  }).join('\n');
+                  
+                  // Создаем полное сообщение для Протея
+                  const fullMessage = `Привет, Протей! Я только что прошел тест Big Five и хочу обсудить результаты. Вот что получилось:\n\n# 🧠 Результаты теста Big Five\n\n## Пять факторов личности\n\n${resultText}\n\nМожешь помочь мне разобраться в результатах и дать рекомендации?`;
+                  
+                  // Сохраняем сообщение в localStorage для передачи в чат
+                  localStorage.setItem('proteusChatMessage', fullMessage);
+                  localStorage.setItem('proteusChatSource', 'bigfive-test');
+                  localStorage.setItem('proteusChatTestId', 'bigFive');
+                  
+                  // Перенаправляем на страницу чата
+                  window.location.href = '/chat';
+                  
+                } catch (error) {
+                  console.error('Error preparing chat message:', error);
+                  alert('Ошибка при подготовке сообщения для чата. Попробуйте еще раз.');
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg"
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                <path d="M15 7v2a4 4 0 01-4 4H9l-1 1v-1H6a2 2 0 00-2 2v4a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2z" />
+              </svg>
+              Поговорить с Протеем
             </Button>
           </div>
         </div>
