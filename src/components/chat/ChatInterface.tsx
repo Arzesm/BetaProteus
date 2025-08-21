@@ -60,6 +60,32 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
         }
       }
       
+      // Если ошибка связана с Edge Function, пробуем еще раз
+      if (errorDescription.includes('Edge Function') || errorDescription.includes('Failed to send')) {
+        console.log('ChatInterface: Edge Function error detected, retrying...');
+        toast.info("Повторная попытка подключения к Протею...", { duration: 2000 });
+        
+        // Ждем 2 секунды перед повторной попыткой
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        try {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('chat', {
+            body: { messages: newMessages.slice(-10) },
+          });
+
+          if (retryError) {
+            throw retryError;
+          }
+
+          const assistantMessage: Message = { role: 'assistant', content: retryData.reply };
+          setMessages(prev => [...prev, assistantMessage]);
+          return;
+        } catch (retryError: any) {
+          console.error("Ошибка при повторной попытке:", retryError);
+          errorDescription = retryError.message;
+        }
+      }
+      
       toast.error("Не удалось получить ответ от Протея.", { description: errorDescription });
       const assistantErrorMessage: Message = { role: 'assistant', content: `Произошла ошибка: ${errorDescription}` };
       setMessages(prev => [...prev, assistantErrorMessage]);
@@ -84,7 +110,7 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
       
       // Показываем уведомление о том, что результат теста автоматически отправляется
       toast.success("Результат теста автоматически отправлен Протею!", {
-        description: "Протей анализирует ваши результаты и готовит ответ..."
+        description: "Подождите немного, Протей подключается и анализирует ваши результаты..."
       });
       
       // Автоматически отправляем сообщение с результатом теста
@@ -100,8 +126,10 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
       localStorage.removeItem('proteusChatSource');
       localStorage.removeItem('proteusChatTestId');
       
-      // Автоматически отправляем сообщение Протею
-      sendMessageToProteus(newMessages);
+      // Автоматически отправляем сообщение Протею с увеличенной задержкой для стабилизации
+      setTimeout(() => {
+        sendMessageToProteus(newMessages);
+      }, 2000); // Задержка 2 секунды для полной стабилизации Edge Function
     } else {
       console.log('ChatInterface: No test results found in localStorage');
     }
@@ -114,6 +142,10 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
     setIsLoading(true);
     
     try {
+      // Дополнительная задержка для стабилизации Edge Function
+      console.log('ChatInterface: Waiting for Edge Function to stabilize...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       console.log('ChatInterface: Sending messages to Proteus:', messagesToSend.slice(-10));
       
       const { data, error } = await supabase.functions.invoke('chat', {
@@ -140,6 +172,32 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
           }
         } catch {
           // Ignore if the error response is not JSON
+        }
+      }
+      
+      // Если ошибка связана с Edge Function, пробуем еще раз
+      if (errorDescription.includes('Edge Function') || errorDescription.includes('Failed to send')) {
+        console.log('ChatInterface: Edge Function error in auto-send, retrying...');
+        toast.info("Повторная попытка подключения к Протею...", { duration: 2000 });
+        
+        // Ждем 3 секунды перед повторной попыткой
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        try {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('chat', {
+            body: { messages: messagesToSend.slice(-10) },
+          });
+
+          if (retryError) {
+            throw retryError;
+          }
+
+          const assistantMessage: Message = { role: 'assistant', content: retryData.reply };
+          setMessages(prev => [...prev, assistantMessage]);
+          return;
+        } catch (retryError: any) {
+          console.error("Ошибка при повторной попытке в auto-send:", retryError);
+          errorDescription = retryError.message;
         }
       }
       
@@ -215,7 +273,7 @@ export default function ChatInterface({ messages, setMessages }: ChatInterfacePr
                   <div className="flex items-center space-x-2">
                     {isAutoSending && (
                       <span className="text-xs text-muted-foreground">
-                        {isAutoSending ? "🤖 Протей анализирует результаты теста..." : "Протей печатает..."}
+                        🤖 Протей подключается и анализирует результаты теста...
                       </span>
                     )}
                     <div className="flex items-center space-x-1">
