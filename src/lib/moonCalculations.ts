@@ -45,6 +45,22 @@ async function initSwissEph() {
       await swe.initSwissEph();
       initialized = true;
       console.log('SwissEph успешно инициализирован');
+      
+      // Проверяем работоспособность на простом расчете
+      try {
+        const testDate = new Date('2025-08-24');
+        const testJd = swe.julday(testDate.getFullYear(), testDate.getMonth() + 1, testDate.getDate(), 12);
+        const testMoon = swe.calc_ut(testJd, swe.SE_MOON, swe.SEFLG_SWIEPH);
+        console.log(`✅ Тест SwissEph: Луна на 24.08.2025 в 12:00 = ${testMoon[0].toFixed(2)}°`);
+        
+        // Проверяем знак зодиака
+        const testSign = calculateZodiacSign(testMoon[0]);
+        console.log(`✅ Тест знака: ${testSign} для долготы ${testMoon[0].toFixed(2)}°`);
+        
+      } catch (testError) {
+        console.warn('⚠️ Тест SwissEph не прошел:', testError);
+      }
+      
     } catch (error) {
       console.error('Ошибка инициализации SwissEph:', error);
       throw error;
@@ -55,7 +71,19 @@ async function initSwissEph() {
 
 // Функция для расчета знака зодиака
 function calculateZodiacSign(longitude: number): string {
-  const signIndex = Math.floor(longitude / 30);
+  // Нормализуем долготу в диапазон 0-360
+  let normalizedLongitude = longitude % 360;
+  if (normalizedLongitude < 0) normalizedLongitude += 360;
+  
+  // Определяем знак зодиака (каждый знак занимает 30°)
+  // Овен: 0° - 29.999°, Телец: 30° - 59.999°, и т.д.
+  const signIndex = Math.floor(normalizedLongitude / 30);
+  
+  // Добавляем отладочную информацию для критических дат
+  if (Math.abs(longitude - 240) < 30) { // Примерно в районе Девы (150° - 180°)
+    console.log(`🔍 Отладка знака: долгота = ${longitude.toFixed(2)}°, нормализованная = ${normalizedLongitude.toFixed(2)}°, индекс = ${signIndex}, знак = ${zodiacSigns[signIndex]}`);
+  }
+  
   return zodiacSigns[signIndex];
 }
 
@@ -63,6 +91,15 @@ function calculateZodiacSign(longitude: number): string {
 function getCachedMoonData(date: string): MoonData | null {
   const cached = moonDataCache.get(date);
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    // Проверяем точность кэшированных данных для критических дат
+    const dateObj = new Date(date);
+    if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+      // Для 24 августа 2025 НИКОГДА не используем кэш
+      console.log('🚫 Критическая дата 24.08.2025 - НИКОГДА не используем кэш!');
+      moonDataCache.delete(date); // Очищаем кэш
+      return null; // Возвращаем null, чтобы сделать новый расчет
+    }
+    
     console.log('Используем кэшированные данные для даты:', date);
     return cached.data;
   }
@@ -181,7 +218,17 @@ export async function calculateMoonPhaseWithSwissEph(date: string, time?: string
     const sign = calculateZodiacSign(moonLongitude);
     const signEmoji = getSignEmoji(sign);
     
-         console.log(`Москва: Луна в знаке ${sign} (${moonLongitude.toFixed(2)}°), фаза: ${phase}, освещенность: ${illumination}%, элонгация: ${elongation.toFixed(2)}°`);
+    // Добавляем отладочную информацию для критических дат
+    const dateObj = new Date(date);
+    if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+      console.log(`🔍 КРИТИЧЕСКАЯ ДАТА 24 августа 2025:`);
+      console.log(`   SwissEph: долгота Луны = ${moonLongitude.toFixed(2)}°`);
+      console.log(`   Знак зодиака = ${sign} (${signEmoji})`);
+      console.log(`   Фаза = ${phase}, освещенность = ${illumination}%`);
+      console.log(`   Элонгация = ${elongation.toFixed(2)}°`);
+    }
+    
+    console.log(`Москва: Луна в знаке ${sign} (${moonLongitude.toFixed(2)}°), фаза: ${phase}, освещенность: ${illumination}%, элонгация: ${elongation.toFixed(2)}°`);
     
     return {
       phase,
@@ -247,23 +294,65 @@ function calculateMoonPhaseFallback(date: string): MoonData {
      phaseEmoji = "🌑";
    }
   
-  // Упрощенный расчет положения луны в знаке зодиака
+    // Улучшенный расчет положения луны в знаке зодиака
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth() + 1;
   const day = selectedDate.getDate();
   
-  // Простая формула для расчета долготы луны
+  // Более точная формула для расчета долготы луны (Jean Meeus)
   const T = (year - 2000) / 100;
-  const L = 218.3164477 + 481267.88123421 * T + 0.0015786 * T * T;
-  const M = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T;
-  const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T * T;
+  const T2 = T * T;
+  const T3 = T2 * T;
+  const T4 = T3 * T;
   
-  let moonLongitude = L + 6.2886 * Math.sin(M * Math.PI / 180) + 1.2740 * Math.sin((2 * F - M) * Math.PI / 180);
+  // Средняя долгота Луны
+  const L = 218.3164477 + 481267.88123421 * T - 0.0015786 * T2 + T3 / 538841 - T4 / 65194000;
+  
+  // Средняя аномалия Луны
+  const M = 134.9633964 + 477198.8675055 * T + 0.0087414 * T2 + T3 / 69699 - T4 / 14712000;
+  
+  // Средняя аномалия Солнца
+  const Mprime = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2 + T3 / 24490000;
+  
+  // Аргумент широты Луны
+  const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T2 - T3 / 3526000 + T4 / 863310000;
+  
+  // Долгота восходящего узла Луны
+  const Omega = 125.0445550 - 1934.1361849 * T + 0.0020762 * T2 + T3 / 467410 - T4 / 60616000;
+  
+  // Расчет долготы Луны с учетом основных возмущений
+  let moonLongitude = L + 6.2886 * Math.sin(M * Math.PI / 180) 
+                     + 1.2740 * Math.sin((2 * F - M) * Math.PI / 180)
+                     + 0.6583 * Math.sin((2 * F) * Math.PI / 180)
+                     + 0.2136 * Math.sin((2 * M) * Math.PI / 180)
+                     - 0.1856 * Math.sin(Mprime * Math.PI / 180)
+                     - 0.1143 * Math.sin((2 * F - 2 * M) * Math.PI / 180)
+                     + 0.0588 * Math.sin((2 * F - 2 * M + Mprime) * Math.PI / 180)
+                     + 0.0572 * Math.sin((2 * F - M - Mprime) * Math.PI / 180)
+                     - 0.0533 * Math.sin((2 * F + M) * Math.PI / 180)
+                     + 0.0458 * Math.sin((2 * F - Mprime) * Math.PI / 180)
+                     + 0.0410 * Math.sin(Mprime * Math.PI / 180)
+                     - 0.0347 * Math.sin((2 * F + Mprime) * Math.PI / 180)
+                     - 0.0305 * Math.sin((2 * F - 2 * M) * Math.PI / 180)
+                     + 0.0153 * Math.sin((2 * F - 2 * M - Mprime) * Math.PI / 180)
+                     - 0.0125 * Math.sin((2 * F - 2 * M + Mprime) * Math.PI / 180)
+                     + 0.0107 * Math.sin((2 * F + 2 * M) * Math.PI / 180);
+  
   moonLongitude = moonLongitude % 360;
   if (moonLongitude < 0) moonLongitude += 360;
   
+  // Добавляем отладочную информацию для критических дат
+  if (year === 2025 && month === 8 && day === 24) {
+    console.log(`🔍 Отладка для 24 августа 2025: долгота Луны = ${moonLongitude.toFixed(2)}°`);
+  }
+  
   const sign = calculateZodiacSign(moonLongitude);
   const signEmoji = getSignEmoji(sign);
+  
+  // Дополнительная проверка для критических дат
+  if (year === 2025 && month === 8 && day === 24) {
+    console.log(`🔍 Отладка для 24 августа 2025: знак = ${sign}, долгота = ${moonLongitude.toFixed(2)}°`);
+  }
   
   return {
     phase,
@@ -320,15 +409,48 @@ export interface MoonData {
 // Основная функция для получения лунных данных для Москвы
 export async function getMoonData(date: string, time?: string): Promise<MoonData> {
   try {
-    // Сначала проверяем кэш
+    // Для критических дат ВСЕГДА делаем новый расчет, НЕ используем кэш
+    const dateObj = new Date(date);
+    if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+      console.log('🚫 КРИТИЧЕСКАЯ ДАТА 24.08.2025 - ПОЛНОСТЬЮ ИГНОРИРУЕМ КЭШ!');
+      
+      // Принудительно очищаем кэш для этой даты
+      clearMoonDataCacheForDate(date);
+      console.log('🗑️ Кэш для 24.08.2025 очищен');
+      
+      // Делаем новый расчет через SwissEph
+      try {
+        const moonData = await calculateMoonPhaseWithSwissEph(date, time);
+        console.log('✅ Новый расчет SwissEph для 24.08.2025:', moonData);
+        
+        // НЕ сохраняем в кэш для критических дат, чтобы избежать проблем
+        console.log('🚫 Данные НЕ сохраняются в кэш для критической даты');
+        return moonData;
+      } catch (swissError) {
+        console.error('❌ SwissEph не сработал для 24.08.2025:', swissError);
+        // Для критической даты НЕ используем fallback, возвращаем ошибку
+        throw new Error(`Не удалось рассчитать данные для критической даты 24.08.2025: ${swissError.message}`);
+      }
+    }
+    
+    // Сначала проверяем кэш для обычных дат
     const cachedData = getCachedMoonData(date);
     if (cachedData) {
+      // Добавляем отладочную информацию для критических дат
+      if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+        console.log(`🔍 КЭШ для 24 августа 2025: знак = ${cachedData.sign}, фаза = ${cachedData.phase}`);
+      }
       return cachedData;
     }
 
     // Используем SwissEph для точного расчета для Москвы
     console.log('Рассчитываем данные о луне с помощью SwissEph для Москвы, дата:', date);
     const moonData = await calculateMoonPhaseWithSwissEph(date, time);
+    
+    // Добавляем отладочную информацию для критических дат
+    if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+      console.log(`🔍 НОВЫЙ РАСЧЕТ для 24 августа 2025: знак = ${moonData.sign}, фаза = ${moonData.phase}`);
+    }
     
     // Сохраняем в кэш
     cacheMoonData(date, moonData);
@@ -339,6 +461,12 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
     console.error('Ошибка при получении лунных данных:', error);
     // Fallback на упрощенный расчет
     const fallbackData = calculateMoonPhaseFallback(date);
+    
+    // Добавляем отладочную информацию для критических дат
+    if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+      console.log(`🔍 FALLBACK для 24 августа 2025: знак = ${fallbackData.sign}, фаза = ${fallbackData.phase}`);
+    }
+    
     cacheMoonData(date, fallbackData);
     return fallbackData;
   }
@@ -350,12 +478,41 @@ export function clearMoonDataCache(): void {
   console.log('Кэш данных о луне очищен');
 }
 
+// Функция для очистки кэша для конкретной даты
+export function clearMoonDataCacheForDate(date: string): void {
+  moonDataCache.delete(date);
+  console.log(`Кэш данных о луне очищен для даты: ${date}`);
+}
+
+// Функция для принудительной очистки кэша критических дат
+export function clearCriticalDatesCache(): void {
+  // Очищаем кэш для всех критических дат
+  const criticalDates = ['2025-08-24'];
+  
+  criticalDates.forEach(date => {
+    moonDataCache.delete(date);
+    console.log(`🗑️ Кэш очищен для критической даты: ${date}`);
+  });
+  
+  console.log('✅ Кэш для всех критических дат очищен');
+}
+
 // Функция для получения статистики кэша
 export function getCacheStats(): { size: number; entries: string[] } {
   return {
     size: moonDataCache.size,
     entries: Array.from(moonDataCache.keys())
   };
+}
+
+// Функция для принудительного пересчета данных для конкретной даты
+export async function recalculateMoonData(date: string, time?: string): Promise<MoonData> {
+  // Очищаем кэш для этой даты
+  clearMoonDataCacheForDate(date);
+  
+  // Пересчитываем данные
+  console.log(`Принудительный пересчет данных о луне для даты: ${date}`);
+  return await getMoonData(date, time);
 }
 
 // Функция для тестирования расчетов
@@ -366,7 +523,56 @@ export async function testMoonCalculations() {
   return result;
 }
 
+// Функция для тестирования конкретной даты
+export async function testSpecificDate(date: string) {
+  console.log(`🧪 Тестируем дату: ${date}`);
+  
+  try {
+    // Очищаем кэш для этой даты
+    clearMoonDataCacheForDate(date);
+    
+    // Тестируем SwissEph
+    console.log('1️⃣ Тестируем SwissEph...');
+    const swissEphResult = await calculateMoonPhaseWithSwissEph(date);
+    console.log('SwissEph результат:', swissEphResult);
+    
+    // Тестируем fallback
+    console.log('2️⃣ Тестируем fallback...');
+    const fallbackResult = calculateMoonPhaseFallback(date);
+    console.log('Fallback результат:', fallbackResult);
+    
+    // Сравниваем результаты
+    console.log('3️⃣ Сравнение результатов:');
+    console.log(`   SwissEph: знак = ${swissEphResult.sign}, фаза = ${swissEphResult.phase}`);
+    console.log(`   Fallback: знак = ${fallbackResult.sign}, фаза = ${fallbackResult.phase}`);
+    
+    if (swissEphResult.sign !== fallbackResult.sign) {
+      console.warn('⚠️ РАЗЛИЧИЕ В ЗНАКАХ ЗОДИАКА!');
+    }
+    
+    return { swissEphResult, fallbackResult };
+    
+  } catch (error) {
+    console.error('❌ Ошибка при тестировании:', error);
+    return null;
+  }
+}
+
 // Экспортируем функцию для совместимости
 export function calculateMoonPhase(date: string): MoonData {
   return calculateMoonPhaseFallback(date);
+}
+
+// Глобальная функция для тестирования в консоли браузера
+if (typeof window !== 'undefined') {
+  (window as any).testMoonPhase = async (date: string) => {
+    console.log(`🧪 Тестируем лунную фазу для даты: ${date}`);
+    return await testSpecificDate(date);
+  };
+  
+  (window as any).getMoonCacheInfo = () => {
+    const info = getCacheStats();
+    console.log('📊 Информация о кэше:', info);
+    return info;
+  };
 } 

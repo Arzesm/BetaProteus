@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ru } from "date-fns/locale";
 import { format } from "date-fns";
 import { Moon } from "lucide-react";
-import { getMoonData } from "@/lib/moonCalculations";
+import { getMoonData, clearCriticalDatesCache } from "@/lib/moonCalculations";
 
 interface MoonData {
   phase: string;
@@ -22,6 +22,22 @@ export function AstroCalendar() {
   const [month, setMonth] = useState<Date>(new Date());
   const [fullMoons, setFullMoons] = useState<Set<string>>(new Set());
   const [newMoons, setNewMoons] = useState<Set<string>>(new Set());
+
+  // При инициализации компонента очищаем кэш для критических дат
+  useEffect(() => {
+    const clearCriticalDatesCache = async () => {
+      try {
+        // Очищаем кэш критических дат при загрузке страницы
+        console.log('🗑️ Очищаем кэш критических дат при инициализации...');
+        clearCriticalDatesCache();
+        console.log('✅ Кэш критических дат очищен при инициализации');
+      } catch (error) {
+        console.warn('⚠️ Не удалось очистить кэш при инициализации:', error);
+      }
+    };
+    
+    clearCriticalDatesCache();
+  }, []);
 
   const getMoonPhaseDescription = (phase: string) => {
     const map: Record<string, string> = {
@@ -42,7 +58,47 @@ export function AstroCalendar() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const data = await getMoonData(format(selectedDate, "yyyy-MM-dd"));
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        const dateObj = new Date(selectedDate);
+        
+        // ПРИНУДИТЕЛЬНО очищаем кэш критических дат при каждой загрузке
+        clearCriticalDatesCache();
+        
+        // Для критической даты 24 августа 2025 ВСЕГДА делаем новый расчет
+        if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
+          console.log('🔍 Критическая дата 24.08.2025 - ПРИНУДИТЕЛЬНО делаем новый расчет через SwissEph...');
+          
+          // Принудительно очищаем кэш для этой даты
+          await clearMoonDataCacheForDate(dateStr);
+          console.log('🗑️ Кэш для 24.08.2025 очищен');
+          
+          // Делаем новый расчет через SwissEph напрямую
+          try {
+            const { calculateMoonPhaseWithSwissEph } = await import('@/lib/moonCalculations');
+            const newData = await calculateMoonPhaseWithSwissEph(dateStr);
+            if (!cancelled) {
+              setMoonData(newData);
+              console.log('✅ Новые данные SwissEph для 24.08.2025:', newData);
+            }
+            return; // Выходим, НЕ используя getMoonData вообще
+          } catch (swissError) {
+            console.error('❌ SwissEph не сработал для 24.08.2025:', swissError);
+            // Для критической даты НЕ используем fallback, показываем ошибку
+            if (!cancelled) {
+              setMoonData({
+                phase: 'Ошибка расчета',
+                phaseEmoji: '⚠️',
+                sign: 'Ошибка',
+                signEmoji: '⚠️',
+                illumination: 0
+              });
+            }
+            return;
+          }
+        }
+        
+        // Обычная загрузка для остальных дат
+        const data = await getMoonData(dateStr);
         if (!cancelled) setMoonData(data as MoonData);
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -161,6 +217,8 @@ export function AstroCalendar() {
             {isLoading && (
               <p className="text-xs text-muted-foreground mt-3">Обновляем лунные данные…</p>
             )}
+            
+
           </div>
         </div>
       </CardContent>
