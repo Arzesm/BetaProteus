@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ru } from "date-fns/locale";
 import { format } from "date-fns";
 import { Moon } from "lucide-react";
-import { getMoonData, clearCriticalDatesCache } from "@/lib/moonCalculations";
+import { getMoonData, clearCriticalDatesCache, clearMoonDataCacheForDate } from "@/lib/moonCalculations";
 
 interface MoonData {
   phase: string;
@@ -25,18 +25,27 @@ export function AstroCalendar() {
 
   // При инициализации компонента очищаем кэш для критических дат
   useEffect(() => {
-    const clearCriticalDatesCache = async () => {
+    const initializeCache = async () => {
       try {
         // Очищаем кэш критических дат при загрузке страницы
         console.log('🗑️ Очищаем кэш критических дат при инициализации...');
         clearCriticalDatesCache();
         console.log('✅ Кэш критических дат очищен при инициализации');
+        
+        // Дополнительно очищаем весь кэш при инициализации
+        console.log('🗑️ Очищаем весь кэш при инициализации...');
+        const { clearMoonDataCacheForDate } = await import('@/lib/moonCalculations');
+        // Очищаем кэш для нескольких дат, чтобы убедиться в чистоте
+        ['2025-08-24', '2025-08-25', '2025-08-26'].forEach(date => {
+          clearMoonDataCacheForDate(date);
+        });
+        console.log('✅ Весь кэш очищен при инициализации');
       } catch (error) {
         console.warn('⚠️ Не удалось очистить кэш при инициализации:', error);
       }
     };
     
-    clearCriticalDatesCache();
+    initializeCache();
   }, []);
 
   const getMoonPhaseDescription = (phase: string) => {
@@ -139,87 +148,128 @@ export function AstroCalendar() {
   }, [month]);
 
   return (
-    <Card className="bg-gradient-to-br from-primary/10 to-background border border-border/60">
-      <CardHeader>
-        <CardTitle className="flex items-center text-xl">
-          <Moon className="mr-3 h-6 w-6 text-primary" />
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center text-xl font-semibold text-card-foreground">
+          <Moon className="mr-3 h-5 w-5 text-primary" />
           Астро-календарь
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl p-2 bg-background/60 border border-border/50">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(d) => d && setSelectedDate(d)}
-            locale={ru}
-            month={month}
-            onMonthChange={setMonth}
-            modifiers={{
-              fullMoon: (date: Date) => fullMoons.has(format(date, "yyyy-MM-dd")),
-              newMoon: (date: Date) => newMoons.has(format(date, "yyyy-MM-dd")),
-            }}
-            modifiersClassNames={{
-              fullMoon:
-                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-red-500/80",
-              newMoon:
-                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-slate-900",
-            } as any}
-            className="mx-auto"
-          />
+      
+      <CardContent className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto">
+        {/* Календарь */}
+        <div className="rounded-lg border border-border bg-card p-4 flex justify-center">
+          <div className="w-full max-w-sm">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => d && setSelectedDate(d)}
+              locale={ru}
+              month={month}
+              onMonthChange={setMonth}
+              modifiers={{
+                fullMoon: (date: Date) => fullMoons.has(format(date, "yyyy-MM-dd")),
+                newMoon: (date: Date) => newMoons.has(format(date, "yyyy-MM-dd")),
+              }}
+              modifiersClassNames={{
+                fullMoon:
+                  "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-2 after:w-2 after:rounded-full after:bg-red-500 after:shadow-sm",
+                newMoon:
+                  "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-2 after:w-2 after:rounded-full after:bg-slate-700 after:shadow-sm",
+              } as any}
+              className="w-full"
+            />
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600 rounded-t-xl" />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Дата</p>
-                <p className="text-lg font-semibold">{format(selectedDate, "d MMMM yyyy", { locale: ru })}</p>
+        {/* Информация о луне */}
+        <div className="space-y-4 min-w-0">
+          {/* Заголовок с датой */}
+          <div className="rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground mb-1">Выбранная дата</p>
+                <p className="text-lg font-semibold text-card-foreground truncate">
+                  {format(selectedDate, "d MMMM yyyy", { locale: ru })}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Badge variant="secondary" className="text-xs whitespace-nowrap">
                   {moonData?.sign ?? "—"}
                 </Badge>
-                <Badge className="bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
+                <Badge variant="outline" className="text-xs whitespace-nowrap">
                   {moonData?.phase ?? "—"}
                 </Badge>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="rounded-lg bg-white/60 dark:bg-black/20 border border-border/40 p-3">
-                <p className="text-xs text-muted-foreground">Знак Луны</p>
-                <p className="text-sm font-semibold flex items-center gap-2">
-                  <span>{moonData?.signEmoji}</span>
-                  <span>{moonData?.sign ?? "—"}</span>
-                </p>
-              </div>
-              <div className="rounded-lg bg-white/60 dark:bg-black/20 border border-border/40 p-3">
-                <p className="text-xs text-muted-foreground">Фаза</p>
-                <p className="text-sm font-semibold flex items-center gap-2">
-                  <span>{moonData?.phaseEmoji}</span>
-                  <span>{moonData?.phase ?? "—"}</span>
-                </p>
-              </div>
-              <div className="rounded-lg bg-white/60 dark:bg-black/20 border border-border/40 p-3">
-                <p className="text-xs text-muted-foreground">Освещённость</p>
-                <p className="text-sm font-semibold">{moonData ? `${moonData.illumination}%` : "—"}</p>
-              </div>
-              <div className="rounded-lg bg-white/60 dark:bg-black/20 border border-border/40 p-3">
-                <p className="text-xs text-muted-foreground">Значение дня</p>
-                <p className="text-sm font-medium leading-relaxed">
-                  {moonData ? getMoonPhaseDescription(moonData.phase) : "—"}
-                </p>
+          {/* Карточки с информацией */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Знак Луны */}
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center gap-3">
+                <div className="text-xl flex-shrink-0">{moonData?.signEmoji}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground mb-1">Знак Луны</p>
+                  <p className="text-sm font-medium text-card-foreground truncate">{moonData?.sign ?? "—"}</p>
+                </div>
               </div>
             </div>
-
-            {isLoading && (
-              <p className="text-xs text-muted-foreground mt-3">Обновляем лунные данные…</p>
-            )}
             
-
+            {/* Фаза Луны */}
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center gap-3">
+                <div className="text-xl flex-shrink-0">{moonData?.phaseEmoji}</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground mb-1">Фаза Луны</p>
+                  <p className="text-sm font-medium text-card-foreground truncate">{moonData?.phase ?? "—"}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Освещённость */}
+            <div className="rounded-lg border border-border bg-card p-3 sm:col-span-2">
+              <div className="flex items-center gap-3">
+                <div className="text-xl flex-shrink-0">🌕</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground mb-1">Освещённость</p>
+                  <p className="text-sm font-medium text-card-foreground mb-2">{moonData ? `${moonData.illumination}%` : "—"}</p>
+                  {moonData && (
+                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${moonData.illumination}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Значение дня */}
+            <div className="rounded-lg border border-border bg-card p-3 sm:col-span-2">
+              <div className="flex items-start gap-3">
+                <div className="text-xl flex-shrink-0 mt-0.5">✨</div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground mb-1">Значение дня</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {moonData ? getMoonPhaseDescription(moonData.phase) : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Индикатор загрузки */}
+          {isLoading && (
+            <div className="rounded-lg border border-border bg-card p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+                <p className="text-sm text-muted-foreground">Обновляем лунные данные…</p>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
