@@ -151,7 +151,7 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
-                                <IconComponent className="w-12 h-12 text-primary" />
+                                <IconComponent className="w-12 h-12 text-[#000126]" />
                                 <div className="text-left">
                                   <h4 className="font-semibold text-lg">{archetypeConfig.name}</h4>
                                   <Badge className={getLevelColor(result.level)}>
@@ -160,7 +160,7 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-2xl font-bold text-primary">
+                                <div className="text-2xl font-bold text-[#000126]">
                                   {result.score}/{result.maxScore}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
@@ -257,7 +257,7 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
                         <AccordionItem key={result.archetype} value={result.archetype}>
                           <AccordionTrigger className="hover:no-underline">
                             <div className="flex items-center space-x-3 w-full">
-                              <IconComponent className="w-5 h-5 text-primary" />
+                              <IconComponent className="w-5 h-5 text-[#000126]" />
                               <span className="font-medium">{archetypeConfig.name}</span>
                               <Badge className={getLevelColor(result.level)}>
                                 {getLevelText(result.level)}
@@ -478,102 +478,145 @@ export const ArchetypeTest: React.FC<ArchetypeTestProps> = ({ onComplete }) => {
       ) : (
         <div className="max-w-2xl mx-auto">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-6">
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Вопрос {currentQuestion + 1} из {totalQuestions}</h2>
-                  <Badge variant="secondary">
-                    {archetypeTestConfig.archetypes[currentQ.archetype].name}
-                  </Badge>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-foreground">
+                      Вопрос {currentQuestion + 1} из {totalQuestions}
+                    </h2>
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {archetypeTestConfig.archetypes[currentQ.archetype].name}
+                    </Badge>
+                  </div>
                 </div>
-                <Progress value={progress} className="h-2" />
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Прогресс</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-3" />
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-medium">{currentQ.question}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Выберите ответ по шкале от 0 до 3
-                </p>
+              <div className="text-center space-y-4 p-6 bg-muted/30 rounded-lg border border-border/50">
+                <h3 className="text-xl font-semibold leading-relaxed text-foreground">
+                  {currentQ.question}
+                </h3>
+                <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+                  <span className="px-3 py-1 bg-background rounded-full border border-border">
+                    Выберите ответ по шкале от 0 до 3
+                  </span>
+                </div>
               </div>
 
-              <div className="grid gap-3">
-                <Button
-                  variant={answers[currentQ.id] === 0 ? "default" : "outline"}
-                  onClick={() => handleAnswer(0)}
-                  className="justify-start h-auto p-4"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">0 - Совсем не про меня</div>
-                    <div className="text-sm text-muted-foreground">
-                      Это утверждение абсолютно не соответствует моей личности
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  {hasAnswer && (
+                    <div className="inline-flex items-center space-x-2 px-4 py-2 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300 rounded-full border border-green-200 dark:border-green-800">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="text-sm font-medium">Ответ выбран</span>
                     </div>
-                  </div>
-                </Button>
+                  )}
+                </div>
                 
-                <Button
-                  variant={answers[currentQ.id] === 1 ? "default" : "outline"}
-                  onClick={() => handleAnswer(1)}
-                  className="justify-start h-auto p-4"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">1 - Скорее не про меня</div>
-                    <div className="text-sm text-muted-foreground">
-                      Это утверждение в основном не соответствует моей личности
+                <div className="grid gap-4">
+                  <Button
+                    variant={answers[currentQ.id] === 0 ? "default" : "outline"}
+                    onClick={() => handleAnswer(0)}
+                    className={`justify-start h-auto p-6 text-left transition-all duration-200 ${
+                      answers[currentQ.id] === 0 
+                        ? "bg-[#000126] text-white hover:bg-[#000126]/90 shadow-lg" 
+                        : "hover:bg-accent hover:border-[#000126]/30 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="w-full">
+                      <div className="font-semibold text-base mb-2">0 - Совсем не про меня</div>
+                      <div className="text-sm leading-relaxed opacity-90">
+                        Это утверждение абсолютно не соответствует моей личности
+                      </div>
                     </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant={answers[currentQ.id] === 2 ? "default" : "outline"}
-                  onClick={() => handleAnswer(2)}
-                  className="justify-start h-auto p-4"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">2 - Иногда про меня</div>
-                    <div className="text-sm text-muted-foreground">
-                      Это утверждение иногда соответствует моей личности
+                  </Button>
+                  
+                  <Button
+                    variant={answers[currentQ.id] === 1 ? "default" : "outline"}
+                    onClick={() => handleAnswer(1)}
+                    className={`justify-start h-auto p-6 text-left transition-all duration-200 ${
+                      answers[currentQ.id] === 1 
+                        ? "bg-[#000126] text-white hover:bg-[#000126]/90 shadow-lg" 
+                        : "hover:bg-accent hover:border-[#000126]/30 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="w-full">
+                      <div className="font-semibold text-base mb-2">1 - Скорее не про меня</div>
+                      <div className="text-sm leading-relaxed opacity-90">
+                        Это утверждение в основном не соответствует моей личности
+                      </div>
                     </div>
-                  </div>
-                </Button>
-                
-                <Button
-                  variant={answers[currentQ.id] === 3 ? "default" : "outline"}
-                  onClick={() => handleAnswer(3)}
-                  className="justify-start h-auto p-4"
-                >
-                  <div className="text-left">
-                    <div className="font-medium">3 - Очень похоже на меня</div>
-                    <div className="text-sm text-muted-foreground">
-                      Это утверждение очень точно описывает мою личность
+                  </Button>
+                  
+                  <Button
+                    variant={answers[currentQ.id] === 2 ? "default" : "outline"}
+                    onClick={() => handleAnswer(2)}
+                    className={`justify-start h-auto p-6 text-left transition-all duration-200 ${
+                      answers[currentQ.id] === 2 
+                        ? "bg-[#000126] text-white hover:bg-[#000126]/90 shadow-lg" 
+                        : "hover:bg-accent hover:border-[#000126]/30 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="w-full">
+                      <div className="font-semibold text-base mb-2">2 - Иногда про меня</div>
+                      <div className="text-sm leading-relaxed opacity-90">
+                        Это утверждение иногда соответствует моей личности
+                      </div>
                     </div>
-                  </div>
-                </Button>
+                  </Button>
+                  
+                  <Button
+                    variant={answers[currentQ.id] === 3 ? "default" : "outline"}
+                    onClick={() => handleAnswer(3)}
+                    className={`justify-start h-auto p-6 text-left transition-all duration-200 ${
+                      answers[currentQ.id] === 3 
+                        ? "bg-[#000126] text-white hover:bg-[#000126]/90 shadow-lg" 
+                        : "hover:bg-accent hover:border-[#000126]/30 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="w-full">
+                      <div className="font-semibold text-base mb-2">3 - Очень похоже на меня</div>
+                      <div className="text-sm leading-relaxed opacity-90">
+                        Это утверждение очень точно описывает мою личность
+                      </div>
+                    </div>
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 border-t border-border/50">
                 <Button
                   onClick={previousQuestion}
                   disabled={currentQuestion === 0}
                   variant="outline"
+                  className="px-6 py-3 h-auto"
                 >
-                  Назад
+                  ← Назад
                 </Button>
                 
                 {currentQuestion === totalQuestions - 1 ? (
                   <Button
                     onClick={finishTest}
                     disabled={!hasAnswer}
-                    className="bg-primary hover:bg-primary/90"
+                    className="bg-[#000126] hover:bg-[#000126]/90 px-8 py-3 h-auto text-lg font-semibold"
                   >
-                    Завершить тест
+                    🎯 Завершить тест
                   </Button>
                 ) : (
                   <Button
                     onClick={nextQuestion}
                     disabled={!hasAnswer}
+                    className="px-8 py-3 h-auto text-lg font-semibold"
                   >
-                    Следующий вопрос
+                    Следующий вопрос →
                   </Button>
                 )}
               </div>

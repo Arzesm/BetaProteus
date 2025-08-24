@@ -55,7 +55,7 @@ export function MBTIQuiz({ onComplete }: MBTIQuizProps) {
       description={`Вопрос ${currentQuestionIndex + 1} из ${mbtiQuestions.length}`}
       progress={progress}
       question={currentQuestion.question}
-      className="border-primary/20 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20"
+                      className="border-[#000126]/20 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20"
     >
       {currentQuestion.options.map((option, index) => (
         <motion.div
@@ -65,7 +65,7 @@ export function MBTIQuiz({ onComplete }: MBTIQuizProps) {
         >
           <Button
             variant="outline"
-            className="w-full h-auto py-4 text-base justify-start border-primary/30 hover:bg-primary/10 hover:text-primary"
+                            className="w-full h-auto py-4 text-base justify-start border-[#000126]/30 hover:bg-[#000126]/10 hover:text-[#000126]"
             onClick={() => handleAnswer(option.type)}
           >
             {option.text}

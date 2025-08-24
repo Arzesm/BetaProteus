@@ -5,7 +5,7 @@ import Astrology from "@/pages/Astrology";
 import PersonalityAnalysis from "@/pages/PersonalityAnalysis";
 import Dreams from "@/pages/Dreams";
 import Journal from "@/pages/Journal";
-import Health from "@/pages/Health";
+import Meditation from "@/pages/Meditation";
 import Chat from "@/pages/Chat";
 import NotFound from "@/pages/NotFound";
 import Psychology from "@/pages/Psychology";
@@ -22,7 +22,7 @@ function AppRoutes() {
           <Route path="personality" element={<PersonalityAnalysis />} />
           <Route path="dreams" element={<Dreams />} />
           <Route path="journal" element={<Journal />} />
-          <Route path="health" element={<Health />} />
+          <Route path="meditation" element={<Meditation />} />
           <Route path="chat" element={<Chat />} />
           <Route path="psychology" element={<Psychology />} />
           <Route path="*" element={<NotFound />} />

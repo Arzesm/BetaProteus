@@ -111,7 +111,7 @@ const Dashboard = () => {
                 <Card className="bg-gradient-to-br from-primary/10 to-background">
                   <CardHeader>
                     <CardTitle className="flex items-center text-xl">
-                      <Sparkles className="mr-3 h-6 w-6 text-primary" />
+                      <Sparkles className="mr-3 h-6 w-6 text-[#000126]" />
                       Ваш персональный прогноз
                     </CardTitle>
                   </CardHeader>
@@ -142,10 +142,10 @@ const Dashboard = () => {
                   ) : recentDreams.length > 0 ? (
                     <div className="space-y-3">
                       {recentDreams.map((dream) => (
-                        <div key={dream.id} className="group relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-r from-background to-muted/20 p-4 transition-all duration-300 hover:border-primary/30 hover:shadow-md">
+                        <div key={dream.id} className="group relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-r from-background to-muted/20 p-4 transition-all duration-300 hover:border-[#000126]/30 hover:shadow-md">
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                              <h4 className="font-semibold text-sm truncate group-hover:text-[#000126] transition-colors">
                                 {dream.title}
                               </h4>
                               <p className="text-xs text-muted-foreground mt-1">
@@ -170,7 +170,7 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">Здесь будут отображаться ваши последние сны</p>
                     </div>
                   )}
-                  <Button variant="outline" asChild className="w-full mt-4 hover:bg-primary/5 hover:border-primary/30 transition-all duration-300">
+                  <Button variant="outline" asChild className="w-full mt-4 hover:bg-[#000126]/5 hover:border-[#000126]/30 transition-all duration-300">
                     <Link to="/dreams" className="flex items-center justify-center">
                       <BookOpen className="mr-2 h-4 w-4" />
                       Перейти в дневник снов

@@ -940,7 +940,7 @@ ${recommendations}`;
                                   return (
                                     <div className="space-y-6">
                                       <div className="text-center">
-                                        <h2 className="text-2xl font-bold text-primary mb-4">
+                                        <h2 className="text-2xl font-bold text-[#000126] mb-4">
                                           📊 Результаты теста Big Five
                                         </h2>
                                         <p className="text-muted-foreground">
@@ -975,7 +975,7 @@ ${recommendations}`;
                                                 </div>
                                               </div>
                                               <div className="text-right">
-                                                <div className="text-2xl font-bold text-primary">
+                                                <div className="text-2xl font-bold text-[#000126]">
                                                   {factorResult.score}/{factorResult.maxScore}
                                                 </div>
                                                 <div className="text-sm text-muted-foreground">
@@ -1090,7 +1090,7 @@ ${recommendations}`;
                                             >
                                               <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-4">
-                                                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white text-2xl">
+                                                  <div className="w-12 h-12 bg-[#000126] rounded-full flex items-center justify-center text-white text-2xl">
                                                     {archetypeResult.archetype === 'innocent' ? '🌿' :
                                                      archetypeResult.archetype === 'everyman' ? '👥' :
                                                      archetypeResult.archetype === 'hero' ? '⚔️' :
@@ -1133,7 +1133,7 @@ ${recommendations}`;
                                                   </div>
                                                 </div>
                                                 <div className="text-right">
-                                                  <div className="text-2xl font-bold text-primary">
+                                                  <div className="text-2xl font-bold text-[#000126]">
                                                     {archetypeResult.score}/{archetypeResult.maxScore}
                                                   </div>
                                                   <div className="text-sm text-muted-foreground">

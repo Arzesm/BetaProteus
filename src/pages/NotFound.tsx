@@ -25,7 +25,7 @@ const NotFound = () => {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-muted-foreground mb-4">Ой! Страница не найдена</p>
-        <a href="/" className="text-primary hover:underline">
+                    <a href="/" className="text-[#000126] hover:underline">
           Вернуться на главную
         </a>
       </div>

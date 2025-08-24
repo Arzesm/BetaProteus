@@ -160,9 +160,9 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-[#000126]/10 flex items-center justify-center">
                         {React.createElement(bigFiveTestConfig.factors[result.factor as keyof typeof bigFiveTestConfig.factors].icon, {
-                          className: "w-5 h-5 text-primary"
+                                                      className: "w-5 h-5 text-[#000126]"
                         })}
                       </div>
                       <div>
@@ -401,7 +401,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                     <div className="flex items-center space-x-3">
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                         answers[currentQ.id] === option.score 
-                          ? "border-primary bg-primary text-primary-foreground" 
+                          ? "border-[#000126] bg-[#000126] text-white" 
                           : "border-muted-foreground"
                       }`}>
                         {answers[currentQ.id] === option.score && (

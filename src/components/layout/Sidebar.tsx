@@ -22,7 +22,7 @@ export function Sidebar() {
             className={({ isActive }) =>
               cn(
                 "flex items-center px-3 py-2 text-card-foreground rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
-                isActive && "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                isActive && "bg-[#000126] text-white hover:bg-[#000126]/90 hover:text-white"
               )
             }
           >
