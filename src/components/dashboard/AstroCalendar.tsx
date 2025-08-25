@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ru } from "date-fns/locale";
 import { format } from "date-fns";
 import { Moon } from "lucide-react";
-import { getMoonData, clearCriticalDatesCache, clearMoonDataCacheForDate, clearAllMoonDataCache } from "@/lib/moonCalculations";
+import { getMoonData, clearCriticalDatesCache, clearMoonDataCacheForDate } from "@/lib/moonCalculations";
 
 interface MoonData {
   phase: string;
@@ -45,11 +45,6 @@ export function AstroCalendar() {
             clearMoonDataCacheForDate(date);
           }
           console.log('✅ ПРОДАКШЕН: Кэш за август 2025 очищен');
-          
-          // В продакшене полностью очищаем весь кэш для обеспечения точности
-          console.log('🚀 ПРОДАКШЕН: Полная очистка всего кэша...');
-          clearAllMoonDataCache();
-          console.log('✅ ПРОДАКШЕН: Весь кэш очищен');
         }
       } catch (error) {
         console.warn('⚠️ Не удалось очистить кэш при инициализации:', error);
@@ -81,29 +76,6 @@ export function AstroCalendar() {
         const dateStr = format(selectedDate, "yyyy-MM-dd");
         const dateObj = new Date(selectedDate);
         
-        // ПРИНУДИТЕЛЬНО очищаем кэш критических дат при каждой загрузке
-        clearCriticalDatesCache();
-        
-        // В продакшене дополнительно очищаем весь кэш за август 2025
-        if (typeof window !== 'undefined' && (
-          window.location.hostname.includes('vercel.app') || 
-          window.location.hostname.includes('netlify.app') ||
-          window.location.hostname !== 'localhost'
-        )) {
-          console.log('🚀 ПРОДАКШЕН: Дополнительная очистка кэша за август 2025...');
-          // Очищаем кэш для всех дат августа 2025
-          for (let day = 1; day <= 31; day++) {
-            const date = `2025-08-${day.toString().padStart(2, '0')}`;
-            await clearMoonDataCacheForDate(date);
-          }
-          console.log('✅ ПРОДАКШЕН: Кэш за август 2025 очищен');
-          
-          // В продакшене полностью очищаем весь кэш для обеспечения точности
-          console.log('🚀 ПРОДАКШЕН: Полная очистка всего кэша...');
-          clearAllMoonDataCache();
-          console.log('✅ ПРОДАКШЕН: Весь кэш очищен');
-        }
-        
         // Для критической даты 24 августа 2025 ВСЕГДА делаем новый расчет
         if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
           console.log('🔍 Критическая дата 24.08.2025 - ПРИНУДИТЕЛЬНО делаем новый расчет через SwissEph...');
@@ -111,17 +83,6 @@ export function AstroCalendar() {
           // Принудительно очищаем кэш для этой даты
           await clearMoonDataCacheForDate(dateStr);
           console.log('🗑️ Кэш для 24.08.2025 очищен');
-          
-          // В продакшене дополнительно очищаем весь кэш для критических дат
-          if (typeof window !== 'undefined' && (
-            window.location.hostname.includes('vercel.app') || 
-            window.location.hostname.includes('netlify.app') ||
-            window.location.hostname !== 'localhost'
-          )) {
-            console.log('🚀 ПРОДАКШЕН: Дополнительная очистка кэша для критической даты...');
-            clearAllMoonDataCache();
-            console.log('✅ ПРОДАКШЕН: Весь кэш очищен для критической даты');
-          }
           
           // Делаем новый расчет через SwissEph напрямую
           try {
@@ -196,59 +157,6 @@ export function AstroCalendar() {
           <Moon className="mr-3 h-5 w-5 text-primary" />
           Астро-календарь
         </CardTitle>
-        {/* Кнопка для принудительной очистки кэша в продакшене */}
-        {typeof window !== 'undefined' && (
-          window.location.hostname.includes('vercel.app') || 
-          window.location.hostname.includes('netlify.app') ||
-          window.location.hostname !== 'localhost'
-        ) && (
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-orange-500 bg-orange-100 px-2 py-1 rounded">
-              🚀 Продакшен
-            </span>
-            <button
-              onClick={() => {
-                console.log('🧹 Принудительная очистка кэша...');
-                clearAllMoonDataCache();
-                // Перезагружаем данные
-                setSelectedDate(new Date(selectedDate));
-              }}
-              className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-              title="Принудительно очистить кэш (для продакшена)"
-            >
-              🧹 Очистить кэш
-            </button>
-            <button
-              onClick={() => {
-                console.log('🔧 Принудительное исправление дат августа 2025...');
-                if ((window as any).fixAugust2025) {
-                  (window as any).fixAugust2025();
-                  // Перезагружаем данные
-                  setSelectedDate(new Date(selectedDate));
-                }
-              }}
-              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              title="Принудительно исправить даты августа 2025"
-            >
-              🔧 Исправить даты
-            </button>
-            <button
-              onClick={async () => {
-                console.log('🧪 Тестирование SwissEph...');
-                if ((window as any).testSwissEphProduction) {
-                  const result = await (window as any).testSwissEphProduction();
-                  console.log('Результат теста SwissEph:', result);
-                  // Перезагружаем данные
-                  setSelectedDate(new Date(selectedDate));
-                }
-              }}
-              className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-              title="Тестировать SwissEph на продакшене"
-            >
-              🧪 Тест SwissEph
-            </button>
-          </div>
-        )}
       </CardHeader>
       
       <CardContent className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto">
