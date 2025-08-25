@@ -218,6 +218,35 @@ export function AstroCalendar() {
             >
               🧹 Очистить кэш
             </button>
+            <button
+              onClick={() => {
+                console.log('🔧 Принудительное исправление дат августа 2025...');
+                if ((window as any).fixAugust2025) {
+                  (window as any).fixAugust2025();
+                  // Перезагружаем данные
+                  setSelectedDate(new Date(selectedDate));
+                }
+              }}
+              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              title="Принудительно исправить даты августа 2025"
+            >
+              🔧 Исправить даты
+            </button>
+            <button
+              onClick={async () => {
+                console.log('🧪 Тестирование SwissEph...');
+                if ((window as any).testSwissEphProduction) {
+                  const result = await (window as any).testSwissEphProduction();
+                  console.log('Результат теста SwissEph:', result);
+                  // Перезагружаем данные
+                  setSelectedDate(new Date(selectedDate));
+                }
+              }}
+              className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              title="Тестировать SwissEph на продакшене"
+            >
+              🧪 Тест SwissEph
+            </button>
           </div>
         )}
       </CardHeader>

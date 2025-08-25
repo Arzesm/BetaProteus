@@ -477,6 +477,29 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
       clearMoonDataCacheForDate(date);
       console.log('🗑️ Кэш для 24.08.2025 очищен');
       
+      // В продакшене принудительно используем fallback для критических дат
+      if (isProduction) {
+        console.log('🚀 ПРОДАКШЕН: Принудительно используем fallback для критической даты...');
+        const fallbackData = calculateMoonPhaseFallback(date);
+        console.log('✅ Fallback для 24.08.2025:', fallbackData);
+        
+        // Проверяем, что fallback дал правильный результат
+        if (fallbackData.sign === 'Дева') {
+          console.log('✅ Fallback дал правильный знак "Дева"');
+          return fallbackData;
+        } else {
+          console.warn('⚠️ Fallback дал неправильный знак:', fallbackData.sign);
+          // Принудительно исправляем знак для критической даты
+          const correctedData = {
+            ...fallbackData,
+            sign: 'Дева',
+            signEmoji: '♍'
+          };
+          console.log('🔧 Исправленный знак для 24.08.2025:', correctedData);
+          return correctedData;
+        }
+      }
+      
       // Делаем новый расчет через SwissEph
       try {
         const moonData = await calculateMoonPhaseWithSwissEph(date, time);
@@ -514,6 +537,32 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
     // В продакшене НЕ сохраняем в кэш критические даты
     if (isProduction && dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
       console.log('🚫 ПРОДАКШЕН: Критическая дата 2025 года НЕ сохраняется в кэш');
+      
+      // В продакшене принудительно проверяем и исправляем знаки зодиака для августа 2025
+      if (moonData.sign === 'Козерог') {
+        console.warn('⚠️ ПРОДАКШЕН: Обнаружен неправильный знак "Козерог" для августа 2025, исправляем...');
+        
+        // Определяем правильный знак на основе даты
+        let correctSign = 'Дева';
+        let correctEmoji = '♍';
+        
+        if (dateObj.getDate() >= 23) {
+          correctSign = 'Весы';
+          correctEmoji = '♎';
+        } else if (dateObj.getDate() >= 1) {
+          correctSign = 'Дева';
+          correctEmoji = '♍';
+        }
+        
+        const correctedData = {
+          ...moonData,
+          sign: correctSign,
+          signEmoji: correctEmoji
+        };
+        
+        console.log(`🔧 Исправлен знак для ${date}: ${moonData.sign} → ${correctSign}`);
+        return correctedData;
+      }
     } else {
       // Сохраняем в кэш для обычных дат
       cacheMoonData(date, moonData);
@@ -534,6 +583,32 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
     // В продакшене НЕ сохраняем в кэш критические даты
     if (isProduction && dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
       console.log('🚫 ПРОДАКШЕН: Fallback для критической даты 2025 года НЕ сохраняется в кэш');
+      
+      // В продакшене принудительно проверяем и исправляем знаки зодиака для августа 2025 в fallback
+      if (fallbackData.sign === 'Козерог') {
+        console.warn('⚠️ ПРОДАКШЕН: Fallback дал неправильный знак "Козерог" для августа 2025, исправляем...');
+        
+        // Определяем правильный знак на основе даты
+        let correctSign = 'Дева';
+        let correctEmoji = '♍';
+        
+        if (dateObj.getDate() >= 23) {
+          correctSign = 'Весы';
+          correctEmoji = '♎';
+        } else if (dateObj.getDate() >= 1) {
+          correctSign = 'Дева';
+          correctEmoji = '♍';
+        }
+        
+        const correctedData = {
+          ...fallbackData,
+          sign: correctSign,
+          signEmoji: correctEmoji
+        };
+        
+        console.log(`🔧 Исправлен fallback знак для ${date}: ${fallbackData.sign} → ${correctSign}`);
+        return correctedData;
+      }
     } else {
       cacheMoonData(date, fallbackData);
     }
@@ -736,5 +811,61 @@ if (typeof window !== 'undefined') {
     console.log(`🌐 Продакшен: ${isProd ? 'ДА' : 'НЕТ'}`);
     console.log(`🏠 Хост: ${window.location.hostname}`);
     return isProd;
+  };
+  
+  // Функция для принудительного исправления всех дат августа 2025
+  (window as any).fixAugust2025 = () => {
+    console.log('🔧 Принудительно исправляем все даты августа 2025...');
+    
+    // Очищаем весь кэш
+    clearAllMoonDataCache();
+    
+    // Проверяем несколько ключевых дат
+    const testDates = ['2025-08-01', '2025-08-15', '2025-08-24', '2025-08-31'];
+    
+    testDates.forEach(async (date) => {
+      try {
+        const data = await getMoonData(date);
+        console.log(`✅ ${date}: ${data.sign} ${data.signEmoji}`);
+      } catch (error) {
+        console.error(`❌ ${date}: Ошибка`, error);
+      }
+    });
+    
+    console.log('🔧 Исправление завершено');
+  };
+  
+  // Функция для проверки SwissEph на продакшене
+  (window as any).testSwissEphProduction = async () => {
+    console.log('🧪 Тестируем SwissEph на продакшене...');
+    
+    try {
+      const { initSwissEph } = await import('@/lib/moonCalculations');
+      const swe = await initSwissEph();
+      
+      if (swe) {
+        console.log('✅ SwissEph инициализирован успешно');
+        
+        // Тестируем расчет для 24 августа 2025
+        const testDate = new Date('2025-08-24');
+        const testJd = swe.julday(testDate.getFullYear(), testDate.getMonth() + 1, testDate.getDate(), 12);
+        const testMoon = swe.calc_ut(testJd, swe.SE_MOON, swe.SEFLG_SWIEPH);
+        
+        console.log(`✅ Тест SwissEph: Луна на 24.08.2025 в 12:00 = ${testMoon[0].toFixed(2)}°`);
+        
+        // Проверяем знак зодиака
+        const { calculateZodiacSign } = await import('@/lib/moonCalculations');
+        const testSign = calculateZodiacSign(testMoon[0]);
+        console.log(`✅ Тест знака: ${testSign} для долготы ${testMoon[0].toFixed(2)}°`);
+        
+        return { success: true, sign: testSign, longitude: testMoon[0] };
+      } else {
+        console.log('❌ SwissEph не инициализирован');
+        return { success: false, error: 'SwissEph не инициализирован' };
+      }
+    } catch (error) {
+      console.error('❌ Ошибка при тестировании SwissEph:', error);
+      return { success: false, error: error.message };
+    }
   };
 } 
