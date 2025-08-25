@@ -32,6 +32,13 @@ const MOSCOW_COORDS = {
 const moonDataCache = new Map<string, { data: MoonData; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
 
+// Флаг для продакшена - более агрессивная очистка кэша
+const isProduction = typeof window !== 'undefined' && (
+  window.location.hostname.includes('vercel.app') || 
+  window.location.hostname.includes('netlify.app') ||
+  window.location.hostname !== 'localhost'
+);
+
 // Глобальный экземпляр SwissEph
 let swe: SwissEph | null = null;
 let initialized = false;
@@ -108,11 +115,29 @@ function getCachedMoonData(date: string): MoonData | null {
       return null; // Возвращаем null, чтобы сделать новый расчет
     }
     
-    // Дополнительная проверка: если знак "Козерог", возможно это ошибка
-    if (cached.data.sign === 'Козерог') {
-      console.log('⚠️ Обнаружен подозрительный знак "Козерог" в кэше, очищаем...');
-      moonDataCache.delete(date);
-      return null;
+    // В продакшене более агрессивно очищаем подозрительные данные
+    if (isProduction) {
+      // Дополнительная проверка: если знак "Козерог", возможно это ошибка
+      if (cached.data.sign === 'Козерог') {
+        console.log('⚠️ ПРОДАКШЕН: Обнаружен подозрительный знак "Козерог" в кэше, очищаем...');
+        moonDataCache.delete(date);
+        return null;
+      }
+      
+      // В продакшене уменьшаем время жизни кэша для критических дат
+      const criticalDate = dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7;
+      if (criticalDate && Date.now() - cached.timestamp > 5 * 60 * 1000) { // 5 минут для критических дат
+        console.log('⚠️ ПРОДАКШЕН: Критическая дата 2025 года - уменьшенное время жизни кэша');
+        moonDataCache.delete(date);
+        return null;
+      }
+    } else {
+      // Дополнительная проверка: если знак "Козерог", возможно это ошибка
+      if (cached.data.sign === 'Козерог') {
+        console.log('⚠️ Обнаружен подозрительный знак "Козерог" в кэше, очищаем...');
+        moonDataCache.delete(date);
+        return null;
+      }
     }
     
     console.log('Используем кэшированные данные для даты:', date);
@@ -427,6 +452,22 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
     // ПРИНУДИТЕЛЬНО очищаем кэш критических дат при каждом вызове
     clearCriticalDatesCache();
     
+    // В продакшене дополнительно очищаем весь кэш для критических дат
+    if (isProduction) {
+      console.log('🚀 ПРОДАКШЕН: Дополнительная очистка кэша...');
+      const dateObj = new Date(date);
+      if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
+        // Очищаем весь кэш за август 2025 года
+        for (const [cacheDate, cached] of moonDataCache.entries()) {
+          const cacheDateObj = new Date(cacheDate);
+          if (cacheDateObj.getFullYear() === 2025 && cacheDateObj.getMonth() === 7) {
+            moonDataCache.delete(cacheDate);
+            console.log(`🚫 ПРОДАКШЕН: Удален кэш за август 2025: ${cacheDate}`);
+          }
+        }
+      }
+    }
+    
     // Для критических дат ВСЕГДА делаем новый расчет, НЕ используем кэш
     const dateObj = new Date(date);
     if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7 && dateObj.getDate() === 24) {
@@ -470,8 +511,13 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
       console.log(`🔍 НОВЫЙ РАСЧЕТ для 24 августа 2025: знак = ${moonData.sign}, фаза = ${moonData.phase}`);
     }
     
-    // Сохраняем в кэш
-    cacheMoonData(date, moonData);
+    // В продакшене НЕ сохраняем в кэш критические даты
+    if (isProduction && dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
+      console.log('🚫 ПРОДАКШЕН: Критическая дата 2025 года НЕ сохраняется в кэш');
+    } else {
+      // Сохраняем в кэш для обычных дат
+      cacheMoonData(date, moonData);
+    }
     
     return moonData;
     
@@ -485,8 +531,25 @@ export async function getMoonData(date: string, time?: string): Promise<MoonData
       console.log(`🔍 FALLBACK для 24 августа 2025: знак = ${fallbackData.sign}, фаза = ${fallbackData.phase}`);
     }
     
-    cacheMoonData(date, fallbackData);
+    // В продакшене НЕ сохраняем в кэш критические даты
+    if (isProduction && dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
+      console.log('🚫 ПРОДАКШЕН: Fallback для критической даты 2025 года НЕ сохраняется в кэш');
+    } else {
+      cacheMoonData(date, fallbackData);
+    }
+    
     return fallbackData;
+  }
+}
+
+// Функция для полной очистки всего кэша (для продакшена)
+export function clearAllMoonDataCache(): void {
+  const cacheSize = moonDataCache.size;
+  moonDataCache.clear();
+  console.log(`🗑️ Полностью очищен весь кэш (${cacheSize} записей)`);
+  
+  if (isProduction) {
+    console.log('🚀 ПРОДАКШЕН: Весь кэш очищен для обеспечения точности расчетов');
   }
 }
 
@@ -512,18 +575,49 @@ export function clearCriticalDatesCache(): void {
     console.log(`🗑️ Кэш очищен для критической даты: ${date}`);
   });
   
-  // Дополнительно очищаем все подозрительные данные со знаком "Козерог"
-  let suspiciousCount = 0;
-  for (const [date, cached] of moonDataCache.entries()) {
-    if (cached.data.sign === 'Козерог') {
-      moonDataCache.delete(date);
-      suspiciousCount++;
-      console.log(`🚫 Удален подозрительный кэш для даты: ${date}`);
+  // В продакшене более агрессивно очищаем подозрительные данные
+  if (isProduction) {
+    console.log('🚀 ПРОДАКШЕН: Агрессивная очистка подозрительных данных...');
+    
+    // Очищаем все данные за август 2025 года
+    for (const [date, cached] of moonDataCache.entries()) {
+      const dateObj = new Date(date);
+      if (dateObj.getFullYear() === 2025 && dateObj.getMonth() === 7) {
+        moonDataCache.delete(date);
+        console.log(`🚫 ПРОДАКШЕН: Удален кэш за август 2025: ${date}`);
+      }
     }
-  }
-  
-  if (suspiciousCount > 0) {
-    console.log(`⚠️ Удалено ${suspiciousCount} подозрительных записей со знаком "Козерог"`);
+    
+    // Очищаем все подозрительные данные со знаком "Козерог"
+    let suspiciousCount = 0;
+    for (const [date, cached] of moonDataCache.entries()) {
+      if (cached.data.sign === 'Козерог') {
+        moonDataCache.delete(date);
+        suspiciousCount++;
+        console.log(`🚫 ПРОДАКШЕН: Удален подозрительный кэш для даты: ${date}`);
+      }
+    }
+    
+    if (suspiciousCount > 0) {
+      console.log(`⚠️ ПРОДАКШЕН: Удалено ${suspiciousCount} подозрительных записей со знаком "Козерог"`);
+    }
+    
+    // В продакшене очищаем весь кэш для критических дат
+    console.log('🚀 ПРОДАКШЕН: Полная очистка кэша критических дат');
+  } else {
+    // Дополнительно очищаем все подозрительные данные со знаком "Козерог"
+    let suspiciousCount = 0;
+    for (const [date, cached] of moonDataCache.entries()) {
+      if (cached.data.sign === 'Козерог') {
+        moonDataCache.delete(date);
+        suspiciousCount++;
+        console.log(`🚫 Удален подозрительный кэш для даты: ${date}`);
+      }
+    }
+    
+    if (suspiciousCount > 0) {
+      console.log(`⚠️ Удалено ${suspiciousCount} подозрительных записей со знаком "Козерог"`);
+    }
   }
   
   console.log('✅ Кэш для всех критических дат очищен');
@@ -606,5 +700,41 @@ if (typeof window !== 'undefined') {
     const info = getCacheStats();
     console.log('📊 Информация о кэше:', info);
     return info;
+  };
+  
+  // Функция для принудительной очистки всего кэша (для продакшена)
+  (window as any).clearAllMoonCache = () => {
+    console.log('🧹 Принудительная очистка всего кэша...');
+    clearAllMoonDataCache();
+    console.log('✅ Весь кэш очищен');
+  };
+  
+  // Функция для тестирования критической даты 24.08.2025
+  (window as any).testAugust24 = async () => {
+    console.log('🧪 Тестируем критическую дату 24.08.2025...');
+    try {
+      // Очищаем весь кэш
+      clearAllMoonDataCache();
+      
+      // Делаем новый расчет
+      const result = await calculateMoonPhaseWithSwissEph('2025-08-24');
+      console.log('✅ Результат для 24.08.2025:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Ошибка при тестировании 24.08.2025:', error);
+      return null;
+    }
+  };
+  
+  // Функция для проверки продакшена
+  (window as any).checkProduction = () => {
+    const isProd = typeof window !== 'undefined' && (
+      window.location.hostname.includes('vercel.app') || 
+      window.location.hostname.includes('netlify.app') ||
+      window.location.hostname !== 'localhost'
+    );
+    console.log(`🌐 Продакшен: ${isProd ? 'ДА' : 'НЕТ'}`);
+    console.log(`🏠 Хост: ${window.location.hostname}`);
+    return isProd;
   };
 } 
