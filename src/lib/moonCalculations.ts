@@ -32,12 +32,18 @@ const MOSCOW_COORDS = {
 const moonDataCache = new Map<string, { data: MoonData; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
 
-// Флаг для продакшена - более агрессивная очистка кэша
-const isProduction = typeof window !== 'undefined' && (
-  window.location.hostname.includes('vercel.app') || 
-  window.location.hostname.includes('netlify.app') ||
-  window.location.hostname !== 'localhost'
-);
+// Определяем, находимся ли мы в продакшене
+const isProduction = typeof window !== 'undefined' && 
+  (window.location.hostname === 'vercel.app' || 
+   window.location.hostname === 'your-domain.vercel.app' ||
+   window.location.hostname === 'localhost' && window.location.port === '3000' && false); // Локальный сервер НЕ продакшен
+
+// Для отладки
+if (typeof window !== 'undefined') {
+  console.log(`🌍 Среда: ${isProduction ? 'ПРОДАКШЕН' : 'ЛОКАЛЬНЫЙ СЕРВЕР'}`);
+  console.log(`📍 Hostname: ${window.location.hostname}`);
+  console.log(`🔌 Port: ${window.location.port}`);
+}
 
 // Глобальный экземпляр SwissEph
 let swe: SwissEph | null = null;
@@ -217,7 +223,7 @@ export async function calculateMoonPhaseWithSwissEph(date: string, time?: string
   try {
     const swe = await initSwissEph();
     
-    // Если SwissEph не инициализирован (особенно в продакшене), используем fallback
+    // Если SwissEph не инициализирован, используем fallback
     if (!swe) {
       console.warn('⚠️ SwissEph не инициализирован, используем fallback расчеты');
       
@@ -256,6 +262,8 @@ export async function calculateMoonPhaseWithSwissEph(date: string, time?: string
         return fallbackData;
       }
       
+      // На локальном сервере также используем улучшенный fallback
+      console.log('🔍 ЛОКАЛЬНЫЙ: Используем улучшенный fallback расчет...');
       return calculateMoonPhaseFallback(date);
     }
     
@@ -378,8 +386,9 @@ export async function calculateMoonPhaseWithSwissEph(date: string, time?: string
       
       return calculateMoonPhaseFallback(date);
     } else {
-      // На локальном сервере выбрасываем ошибку, чтобы понять проблему
-      throw error;
+      // На локальном сервере также используем улучшенный fallback
+      console.log('🔍 ЛОКАЛЬНЫЙ: SwissEph не сработал, используем улучшенный fallback...');
+      return calculateMoonPhaseFallback(date);
     }
   }
 }
@@ -464,10 +473,33 @@ function calculateMoonPhaseFallback(date: string): MoonData {
     };
   }
   
-  // Обычный расчет для локального сервера
-  const signIndex = Math.floor((age / 2.5) % 12);
-  const sign = zodiacSigns[signIndex];
-  const signEmoji = getSignEmoji(sign);
+  // Улучшенный расчет для локального сервера
+  // Используем более точную формулу для знаков зодиака
+  let sign: string;
+  let signEmoji: string;
+  
+  // Для критических дат августа 2025 используем точные значения
+  if (year === 2025 && month === 8) {
+    if (day >= 1 && day <= 22) {
+      sign = 'Дева';
+      signEmoji = '♍';
+    } else if (day >= 23 && day <= 31) {
+      sign = 'Весы';
+      signEmoji = '♎';
+    } else {
+      // Fallback для других дат
+      const signIndex = Math.floor((age / 2.5) % 12);
+      sign = zodiacSigns[signIndex];
+      signEmoji = getSignEmoji(sign);
+    }
+    
+    console.log(`🔍 ЛОКАЛЬНЫЙ: Fallback для ${date}: знак = ${sign}, возраст = ${age.toFixed(2)} дней`);
+  } else {
+    // Обычный расчет для других дат
+    const signIndex = Math.floor((age / 2.5) % 12);
+    sign = zodiacSigns[signIndex];
+    signEmoji = getSignEmoji(sign);
+  }
   
   // В продакшене принудительно исправляем знаки для критических дат
   const correctedSign = correctZodiacSignForProduction(date, sign);

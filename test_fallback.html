@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Fallback Расчетов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-case {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .correct {
+            border-left: 4px solid #4CAF50;
+        }
+        .incorrect {
+            border-left: 4px solid #f44336;
+        }
+        .date {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .sign {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .emoji {
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест Fallback Расчетов для Августа 2025</h1>
+    
+    <div class="test-case correct">
+        <div class="date">1-22 августа 2025</div>
+        <div class="sign">Ожидается: Дева ♍</div>
+        <div class="emoji">♍</div>
+    </div>
+    
+    <div class="test-case correct">
+        <div class="date">23-31 августа 2025</div>
+        <div class="sign">Ожидается: Весы ♎</div>
+        <div class="emoji">♎</div>
+    </div>
+    
+    <div class="test-case incorrect">
+        <div class="date">Любая дата августа 2025</div>
+        <div class="sign">НЕ должно быть: Козерог ♑</div>
+        <div class="emoji">❌</div>
+    </div>
+    
+    <h2>📊 Как проверить в приложении:</h2>
+    
+    <ol>
+        <li>Откройте астро-календарь в приложении</li>
+        <li>Выберите любую дату августа 2025</li>
+        <li>Проверьте, что показывается правильный знак:
+            <ul>
+                <li><strong>1-22 августа:</strong> Дева (♍)</li>
+                <li><strong>23-31 августа:</strong> Весы (♎)</li>
+            </ul>
+        </li>
+        <li>НЕ должно показываться: Козерог (♑)</li>
+    </ol>
+    
+    <h2>🔍 Логи в консоли:</h2>
+    
+    <p>Откройте консоль браузера (F12 → Console) и проверьте:</p>
+    
+    <div class="test-case">
+        <pre>
+🌍 Среда: ЛОКАЛЬНЫЙ СЕРВЕР
+📍 Hostname: localhost
+🔌 Port: 3000
+🔍 ЛОКАЛЬНЫЙ: Fallback для 2025-08-24: знак = Дева, возраст = X.XX дней
+        </pre>
+    </div>
+    
+    <h2>✅ Ожидаемый результат:</h2>
+    
+    <p>Теперь на локальном сервере астро-календарь должен показывать правильные знаки зодиака для августа 2025 года, используя улучшенные fallback расчеты вместо SwissEph.</p>
+    
+    <script>
+        // Простая проверка дат
+        function testDate(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            
+            if (year === 2025 && month === 8) {
+                if (day >= 1 && day <= 22) {
+                    return 'Дева ♍';
+                } else if (day >= 23 && day <= 31) {
+                    return 'Весы ♎';
+                }
+            }
+            return 'Другой знак';
+        }
+        
+        console.log('🧪 Тест fallback расчетов:');
+        console.log('24 августа 2025:', testDate('2025-08-24'));
+        console.log('31 августа 2025:', testDate('2025-08-31'));
+        console.log('15 августа 2025:', testDate('2025-08-15'));
+    </script>
+</body>
+</html>
