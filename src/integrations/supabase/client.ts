@@ -7,4 +7,19 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const isBrowser = typeof window !== 'undefined';
+const isDevHost = isBrowser && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+
+const proxiedFetch: typeof fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  const asString = typeof input === 'string' ? input : (input as URL).toString();
+  const rewritten = asString.startsWith(SUPABASE_URL)
+    ? asString.replace(SUPABASE_URL, '/sb')
+    : asString;
+  return fetch(rewritten, init);
+};
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  global: {
+    fetch: isDevHost ? proxiedFetch : fetch,
+  },
+});

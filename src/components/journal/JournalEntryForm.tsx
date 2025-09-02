@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { CalendarIcon, BookPlus, Mic, StopCircle, Loader2 } from "lucide-react";
+import { CalendarIcon, BookPlus, Mic, StopCircle, Loader2, Bold, Italic, Heading2, Quote, List, ListOrdered, Code, Strikethrough } from "lucide-react";
 import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -62,8 +62,10 @@ export function JournalEntryForm({ onSubmit }: JournalEntryFormProps) {
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [visualMode, setVisualMode] = useState(true);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const visualRef = useRef<HTMLDivElement | null>(null);
 
   const handleFormSubmit = (data: JournalEntry) => {
     onSubmit(data);
@@ -73,6 +75,120 @@ export function JournalEntryForm({ onSubmit }: JournalEntryFormProps) {
       description: "",
       keyEvents: "",
     });
+  };
+
+  // Markdown formatting helpers (текстовый режим)
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const updateSelection = (updater: (text: string, start: number, end: number) => { value: string; newStart: number; newEnd: number }) => {
+    const textarea = descriptionRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const current = form.getValues("description") || "";
+    const { value, newStart, newEnd } = updater(current, start, end);
+    form.setValue("description", value, { shouldValidate: true });
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newStart, newEnd);
+    });
+  };
+
+  const wrapSelection = (prefix: string, suffix: string = prefix) => {
+    updateSelection((text, start, end) => {
+      const before = text.slice(0, start);
+      const selectedRaw = text.slice(start, end);
+      const after = text.slice(end);
+
+      // Если нет выделения — вставляем маркеры и ставим курсор между ними
+      if (!selectedRaw) {
+        const insertion = `${prefix}${suffix}`;
+        const value = `${before}${insertion}${after}`;
+        const caret = (before.length + prefix.length) as number;
+        return { value, newStart: caret, newEnd: caret };
+      }
+
+      // Сохраняем ведущие/замыкающие пробелы снаружи маркеров
+      const leadingSpacesMatch = selectedRaw.match(/^\s+/);
+      const trailingSpacesMatch = selectedRaw.match(/\s+$/);
+      const leading = leadingSpacesMatch ? leadingSpacesMatch[0] : "";
+      const trailing = trailingSpacesMatch ? trailingSpacesMatch[0] : "";
+      const selected = selectedRaw.trim();
+
+      const wrapped = `${leading}${prefix}${selected}${suffix}${trailing}`;
+      const value = `${before}${wrapped}${after}`;
+      const newStart = before.length + leading.length + prefix.length;
+      const newEnd = newStart + selected.length;
+      return { value, newStart, newEnd };
+    });
+  };
+
+  const toggleLinePrefix = (marker: string) => {
+    updateSelection((text, start, end) => {
+      const lines = text.split("\n");
+      let charCount = 0;
+      const newLines = lines.map((line) => {
+        const lineStart = charCount;
+        const lineEnd = charCount + line.length;
+        const inSelection = lineEnd >= start && lineStart <= end;
+        charCount += line.length + 1; // +1 for \n
+        if (!inSelection) return line;
+        const trimmed = line.trimStart();
+        const leadingSpaces = line.slice(0, line.length - trimmed.length);
+        if (trimmed.startsWith(marker)) {
+          return leadingSpaces + trimmed.slice(marker.length).trimStart();
+        }
+        return leadingSpaces + `${marker} ` + trimmed;
+      });
+      const value = newLines.join("\n");
+      return { value, newStart: start, newEnd: start + (value.length - text.length) + (end - start) };
+    });
+  };
+
+  const insertHeading = (level: number) => {
+    const hashes = "#".repeat(Math.min(Math.max(level, 1), 6));
+    updateSelection((text, start, end) => {
+      // Place heading at start of current line
+      const before = text.slice(0, start);
+      const lineStart = before.lastIndexOf("\n") + 1;
+      const after = text.slice(end);
+      const selected = text.slice(start, end) || "Заголовок";
+      const currentLine = text.slice(lineStart, end);
+      const prefix = `${hashes} `;
+      let newLine = selected;
+      // Replace any existing leading hashes in the current selection line
+      newLine = newLine.replace(/^\s*#{1,6}\s*/g, "");
+      const value = text.slice(0, lineStart) + prefix + newLine + after;
+      const newStart = lineStart + prefix.length;
+      const newEnd = newStart + newLine.length;
+      return { value, newStart, newEnd };
+    });
+  };
+
+  // Визуальный режим: execCommand-обёртки
+  const focusVisual = () => {
+    if (visualRef.current) {
+      visualRef.current.focus();
+    }
+  };
+
+  const exec = (command: string, value?: string) => {
+    focusVisual();
+    try {
+      document.execCommand(command, false, value);
+      // синхронизируем HTML в форму
+      const html = visualRef.current?.innerHTML || "";
+      form.setValue("description", html, { shouldValidate: true });
+    } catch {}
+  };
+
+  const toggleBlock = (block: 'h2' | 'blockquote' | 'pre') => {
+    focusVisual();
+    if (!visualRef.current) return;
+    // Попробуем использовать форматирование блока
+    if (block === 'h2') exec('formatBlock', '<h2>');
+    else if (block === 'blockquote') exec('formatBlock', '<blockquote>');
+    else if (block === 'pre') exec('formatBlock', '<pre>');
   };
 
   const handleTranscription = async (audioBlob: Blob) => {
@@ -214,6 +330,7 @@ export function JournalEntryForm({ onSubmit }: JournalEntryFormProps) {
                 )}
               />
             </div>
+            
             <FormField
               control={form.control}
               name="description"
@@ -222,11 +339,59 @@ export function JournalEntryForm({ onSubmit }: JournalEntryFormProps) {
                   <FormLabel>Как прошел ваш день?</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Textarea
-                        placeholder="Опишите свои мысли, чувства и события... или нажмите на микрофон, чтобы надиктовать."
-                        className="min-h-[100px] pr-12"
-                        {...field}
-                      />
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {visualMode ? (
+                          <>
+                            <Button type="button" size="icon" variant="ghost" title="Жирный" onClick={() => exec('bold')}><Bold className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Курсив" onClick={() => exec('italic')}><Italic className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Зачеркнутый" onClick={() => exec('strikeThrough')}><Strikethrough className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Заголовок" onClick={() => toggleBlock('h2')}><Heading2 className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Цитата" onClick={() => toggleBlock('blockquote')}><Quote className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Маркированный список" onClick={() => exec('insertUnorderedList')}><List className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Нумерованный список" onClick={() => exec('insertOrderedList')}><ListOrdered className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Код" onClick={() => toggleBlock('pre')}><Code className="h-4 w-4" /></Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button type="button" size="icon" variant="ghost" title="Жирный (Ctrl+B)" onClick={() => wrapSelection("**")}><Bold className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Курсив (Ctrl+I)" onClick={() => wrapSelection("*")}><Italic className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Зачеркнутый" onClick={() => wrapSelection("~~")}><Strikethrough className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Заголовок" onClick={() => insertHeading(2)}><Heading2 className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Цитата" onClick={() => toggleLinePrefix(">")}><Quote className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Маркированный список" onClick={() => toggleLinePrefix("-")}><List className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Нумерованный список" onClick={() => toggleLinePrefix("1.")}><ListOrdered className="h-4 w-4" /></Button>
+                            <Button type="button" size="icon" variant="ghost" title="Код" onClick={() => wrapSelection("`")}><Code className="h-4 w-4" /></Button>
+                          </>
+                        )}
+                      </div>
+                      {visualMode ? (
+                        <div
+                          ref={visualRef}
+                          contentEditable
+                          className="min-h-[120px] pr-12 rounded-md border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring prose prose-sm max-w-none dark:prose-invert"
+                          onInput={(e) => {
+                            const html = (e.target as HTMLDivElement).innerHTML;
+                            form.setValue('description', html, { shouldValidate: true });
+                          }}
+                          onBlur={(e) => {
+                            const html = (e.target as HTMLDivElement).innerHTML;
+                            form.setValue('description', html, { shouldValidate: true });
+                          }}
+                          dangerouslySetInnerHTML={{ __html: field.value || '' }}
+                        />
+                      ) : (
+                        <Textarea
+                          placeholder="Опишите свои мысли, чувства и события... или нажмите на микрофон, чтобы надиктовать."
+                          className="min-h-[100px] pr-12"
+                          {...field}
+                          ref={(el) => {
+                            descriptionRef.current = el;
+                            // forward ref to RHF
+                            if (typeof field.ref === 'function') field.ref(el);
+                            else (field as any).ref = el;
+                          }}
+                        />
+                      )}
                       <Button
                         type="button"
                         size="icon"
