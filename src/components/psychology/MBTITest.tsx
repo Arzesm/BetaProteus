@@ -1602,27 +1602,34 @@ ${fullDescription}`;
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>{mbtiTest.title}</CardTitle>
-        <CardDescription>{mbtiTest.description}</CardDescription>
-        <div className="flex items-center space-x-2">
-          <Progress value={progress} className="flex-1" />
-          <span className="text-sm text-gray-500">
-            {currentQuestionIndex + 1} / {mbtiTest.questions.length}
-          </span>
+      <CardHeader className="pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <div>
+            <CardTitle className="text-lg sm:text-xl">{mbtiTest.title}</CardTitle>
+            <CardDescription className="text-sm">{mbtiTest.description}</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {currentQuestionIndex + 1}/{mbtiTest.questions.length}
+            </span>
+            <Badge variant="outline" className="text-xs">{Math.round(((currentQuestionIndex + 1) / mbtiTest.questions.length) * 100)}%</Badge>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2 mt-2">
+          <Progress value={progress} className="flex-1 h-2" />
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <div className="text-center">
-          <h3 className="text-lg font-medium mb-4">{currentQuestion.question}</h3>
+          <h3 className="text-base sm:text-lg font-medium mb-3">{currentQuestion.question}</h3>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {currentQuestion.options.map((option, index) => (
             <Button
               key={index}
               variant="outline"
-              className="w-full justify-start h-auto py-4 px-4 text-left"
+              className="w-full justify-start h-auto py-2 px-3 text-left text-sm"
               onClick={() => handleAnswer(option.score)}
             >
               {option.text}
@@ -1631,14 +1638,14 @@ ${fullDescription}`;
         </div>
 
         {/* Кнопки навигации */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-2 pt-3">
           <Button
             variant="outline"
             onClick={goToPreviousQuestion}
             disabled={currentQuestionIndex === 0}
-            className="flex-1"
+            className="flex-1 text-sm py-2"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Назад

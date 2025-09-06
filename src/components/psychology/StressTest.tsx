@@ -111,7 +111,7 @@ const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ 
     return (
       <div className="max-w-4xl mx-auto p-6 text-center">
         <p className="text-red-600">Ошибка: вопрос не найден</p>
-      </div>
+          </div>
     );
   }
 
@@ -123,15 +123,15 @@ const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ 
           variants={pageAnimation}
           initial="initial"
           animate="animate"
-          className="max-w-4xl mx-auto p-6 space-y-6"
+          className="max-w-4xl mx-auto p-4 space-y-4"
         >
-          <Card className="border-4 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold text-blue-800">
+          <Card className="border-2 border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl font-bold text-blue-800">
                 🧠 Результаты теста на стресс
               </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+      </CardHeader>
+      <CardContent className="space-y-6">
               {/* Основной результат */}
               <div className="text-center space-y-4">
                 <div className={`inline-flex items-center px-6 py-3 rounded-full text-xl font-bold shadow-lg ${
@@ -212,7 +212,7 @@ const StressTest: React.FC<{ onComplete: (result: StressResult) => void }> = ({ 
                       </div>
                     </div>
                   </div>
-                </div>
+        </div>
               )}
 
               {/* Кнопки действий */}
@@ -278,7 +278,7 @@ ${recommendations}`;
               </svg>
               Поделиться
             </Button>
-                                  <Button
+            <Button
                     variant="secondary"
                     onClick={() => {
                       try {
@@ -343,28 +343,28 @@ ${recommendations}`;
           variants={pageAnimation}
           initial="initial"
           animate="animate"
-          className="max-w-4xl mx-auto p-6 space-y-6"
+          className="max-w-4xl mx-auto p-4 space-y-4"
         >
           {/* Заголовок и прогресс */}
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold text-blue-800">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl font-bold text-blue-800">
                 🧠 {stressTestConfig.title}
               </CardTitle>
-              <p className="text-blue-600 text-lg">
+              <p className="text-blue-600 text-sm">
                 {stressTestConfig.description}
               </p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm text-gray-600">
+              <div className="space-y-3">
+                <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                   <span>Вопрос {currentQuestion} из {totalQuestions}</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
-                <Progress value={progress} className="h-3" />
-              </div>
-            </CardContent>
-          </Card>
+                <Progress value={progress} className="h-2" />
+        </div>
+      </CardContent>
+    </Card>
 
           {/* Текущий вопрос */}
           <motion.div
@@ -388,7 +388,7 @@ ${recommendations}`;
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
                   {[0, 1, 2, 3, 4].map((value) => (
                     <motion.div
                       key={value}
@@ -397,7 +397,7 @@ ${recommendations}`;
                     >
                       <Button
                         variant="outline"
-                        className={`w-full h-16 text-sm font-medium transition-all duration-200 ${
+                        className={`w-full h-12 text-xs font-medium transition-all duration-200 ${
                           answers[currentQuestion] === value
                             ? 'bg-blue-500 text-white border-blue-500 shadow-lg scale-105'
                             : 'hover:bg-blue-50 hover:border-blue-300'
@@ -414,14 +414,14 @@ ${recommendations}`;
                 </div>
 
                 {/* Кнопки навигации */}
-                <div className="flex gap-3 pt-6">
+                <div className="flex gap-2 pt-4">
                   <Button
                     variant="outline"
                     onClick={goToPreviousQuestion}
                     disabled={currentQuestion === 1}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 border-gray-300"
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 border-gray-300 text-sm py-2"
                   >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                     Назад

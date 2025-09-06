@@ -142,10 +142,10 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
   return (
     <>
       {showResults ? (
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="max-w-4xl mx-auto p-4 space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-center">
                 Результаты теста Big Five
               </CardTitle>
               <p className="text-center text-muted-foreground">
@@ -157,7 +157,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
           <div className="grid gap-6">
             {results.map((result) => (
               <Card key={result.factor}>
-                <CardHeader>
+      <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 rounded-full bg-[#000126]/10 flex items-center justify-center">
@@ -178,9 +178,9 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                       {getLevelText(result.level)}
                     </Badge>
                   </div>
-                </CardHeader>
+      </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
+        <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Баллы: {result.score} / {result.maxScore}</span>
                       <span>{result.percentage}%</span>
@@ -221,8 +221,8 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                             {result.level === 'low' || result.level === 'very_low' 
                               ? result.description 
                               : getLowLevelDescription(result.factor.toLowerCase())}
-                          </p>
-                        </div>
+          </p>
+        </div>
                       </div>
                     </div>
                     
@@ -350,10 +350,10 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
           </div>
         </div>
       ) : (
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="max-w-4xl mx-auto p-4 space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-xl text-center">
                 {bigFiveTestConfig.title}
               </CardTitle>
               <p className="text-center text-muted-foreground">
@@ -363,28 +363,28 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
           </Card>
 
           <Card>
-            <CardHeader>
-              <div className="space-y-4">
+            <CardHeader className="pb-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    Вопрос {currentQuestion + 1} из {totalQuestions}
+                  <span className="text-xs sm:text-sm text-muted-foreground">
+                    {currentQuestion + 1}/{totalQuestions}
                   </span>
-                  <span className="text-sm font-medium">
+                  <span className="text-xs sm:text-sm font-medium">
                     {Math.round(progress)}%
                   </span>
                 </div>
                 <Progress value={progress} className="h-2" />
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               <div className="text-center space-y-2">
-                <h3 className="text-lg font-medium">{currentQ.question}</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-base sm:text-lg font-medium">{currentQ.question}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Выберите ответ по шкале от 1 до 5
                 </p>
               </div>
 
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {[
                   { score: 1, text: "Совершенно не согласен" },
                   { score: 2, text: "Не согласен" },
@@ -395,33 +395,34 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                   <Button
                     key={option.score}
                     variant={answers[currentQ.id] === option.score ? "default" : "outline"}
-                    className="justify-start h-auto p-4 text-left"
+                    className="justify-start h-auto py-2 px-3 text-left text-sm"
                     onClick={() => handleAnswer(option.score)}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                         answers[currentQ.id] === option.score 
                           ? "border-[#000126] bg-[#000126] text-white" 
                           : "border-muted-foreground"
                       }`}>
                         {answers[currentQ.id] === option.score && (
-                          <div className="w-2 h-2 rounded-full bg-current" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-current" />
                         )}
                       </div>
-                      <span className="font-medium">{option.score}.</span>
-                      <span>{option.text}</span>
+                      <span className="font-medium text-xs">{option.score}.</span>
+                      <span className="text-sm">{option.text}</span>
                     </div>
-                  </Button>
-                ))}
+            </Button>
+          ))}
               </div>
 
               <Separator />
 
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-2">
                 <Button
                   onClick={previousQuestion}
                   disabled={currentQuestion === 0}
                   variant="outline"
+                  className="text-sm py-2"
                 >
                   Назад
                 </Button>
@@ -430,7 +431,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                   <Button
                     onClick={finishTest}
                     disabled={!hasAnswer}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 text-sm py-2"
                   >
                     Завершить тест
                   </Button>
@@ -438,6 +439,7 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                   <Button
                     onClick={nextQuestion}
                     disabled={!hasAnswer}
+                    className="text-sm py-2"
                   >
                     Следующий вопрос
                   </Button>
@@ -451,9 +453,9 @@ export const BigFiveTest: React.FC<BigFiveTestProps> = ({ onComplete }) => {
                     ⚠️ Обратный вопрос - будьте внимательны при ответе
                   </p>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+        </div>
+      </CardContent>
+    </Card>
         </div>
       )}
     </>
