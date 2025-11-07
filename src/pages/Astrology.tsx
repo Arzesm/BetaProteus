@@ -96,10 +96,85 @@ const Astrology = () => {
       toast.success("Положения планет рассчитаны!", { id: calculationToast });
 
       const interpretationToast = toast.loading("Протей составляет ваш портрет...");
-      const { data: interpretationData, error } = await supabase.functions.invoke('get-natal-chart-interpretation', {
-        body: { name: data.name, gender: data.gender, planets: calculatedChart.planets, ascendant: calculatedChart.ascendant, aspects: calculatedChart.aspects },
+
+      const chartDescription = `
+Имя: ${data.name}.
+Пол: ${data.gender === 'male' ? 'Мужской' : data.gender === 'female' ? 'Женский' : 'Другой'}.
+Асцендент: ${calculatedChart.ascendant.sign}.
+Планеты:
+${calculatedChart.planets.map((p: any) => {
+    let rulership = '';
+    if (p.rulesHouses && p.rulesHouses.length > 0) {
+        rulership = `, управляет ${p.rulesHouses.join(' и ')} домом(ами)`;
+    }
+    return `${p.name} в знаке ${p.sign} в ${p.house} доме${rulership}`;
+}).join('.\n')}.
+Лунные узлы:
+${calculatedChart.nodes ? `Северный узел в знаке ${calculatedChart.nodes.north.sign} в ${calculatedChart.nodes.north.house} доме.\nЮжный узел в знаке ${calculatedChart.nodes.south.sign} в ${calculatedChart.nodes.south.house} доме.` : 'Не указаны.'}
+Конфигурации:
+${calculatedChart.configurations && calculatedChart.configurations.length > 0 ? calculatedChart.configurations.map((conf: any) => `${conf.name}: ${conf.participants.join(', ')}`).join('.\n') : 'Отсутствуют.'}
+Ключевые аспекты:
+${calculatedChart.aspects.map((a: any) => `${a.planet1} ${a.aspectName} ${a.planet2} (орбис ${a.orb.toFixed(1)}°)`).join('.\n')}.
+`;
+
+      // Вызываем публичную edge-функцию Supabase, где хранится API-ключ
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('get-natal-chart-interpretation-public', {
+        body: {
+          name: data.name,
+          gender: data.gender,
+          planets: calculatedChart.planets,
+          ascendant: calculatedChart.ascendant,
+          aspects: calculatedChart.aspects,
+          nodes: calculatedChart.nodes,
+          configurations: calculatedChart.configurations,
+        }
       });
-      if (error) throw error;
+
+      if (edgeError) {
+        console.error('❌ Ошибка интерпретации (edge):', edgeError);
+        
+        // Fallback: создаем базовую интерпретацию без AI
+        console.log('🔄 Используем fallback интерпретацию...');
+        const fallbackInterpretation = `
+# Астрологический портрет ${data.name}
+
+## Общий портрет личности
+Основываясь на вашей натальной карте, вы обладаете уникальным сочетанием качеств, которые формируют вашу личность. Ваш асцендент в знаке ${calculatedChart.ascendant.sign} говорит о том, как вы проявляетесь в мире.
+
+## Ключевые планеты
+${calculatedChart.planets.slice(0, 3).map((p: any) => `**${p.name}** в знаке ${p.sign} в ${p.house} доме`).join('\n')}
+
+## Лунные узлы
+${calculatedChart.nodes ? `Северный узел — ${calculatedChart.nodes.north.sign}, ${calculatedChart.nodes.north.house} дом.\nЮжный узел — ${calculatedChart.nodes.south.sign}, ${calculatedChart.nodes.south.house} дом.` : 'Информация об узлах недоступна.'}
+
+## Конфигурации
+${calculatedChart.configurations && calculatedChart.configurations.length > 0 ? calculatedChart.configurations.map((conf: any) => `- ${conf.name}: ${conf.participants.join(', ')}`).join('\n') : 'Конфигурации не выявлены.'}
+
+## Рекомендации
+- Развивайте свои сильные стороны
+- Работайте над слабыми местами
+- Используйте астрологические знания для самопознания
+
+*Примечание: Это базовая интерпретация. Для полного анализа рекомендуется консультация с профессиональным астрологом.*
+        `;
+        
+        const interpretation = fallbackInterpretation;
+        const interpretationData = { interpretation };
+        
+        setActiveChart({
+          birthDetails: { birthData: data, city },
+          chartData: calculatedChart,
+          interpretation: interpretationData.interpretation,
+          isSaved: false,
+        });
+        toast.success("Базовая интерпретация готова!", { id: interpretationToast });
+        return;
+      }
+
+      const { interpretation } = edgeData as { interpretation: string };
+      console.log('✅ Получена интерпретация от edge-функции');
+      
+      const interpretationData = { interpretation };
 
       setActiveChart({
         birthDetails: { birthData: data, city },

@@ -42,6 +42,7 @@ export interface PlanetData {
   longitude: number;
   speed: number;
   rulesHouses: number[];
+  isNode?: boolean;
 }
 
 export interface HouseCuspData {
@@ -59,11 +60,23 @@ export interface Aspect {
   orb: number;
 }
 
+export interface ChartConfiguration {
+  name: string;
+  type: 'grand_trine' | 't_square' | 'grand_cross' | 'yod' | 'kite' | 'stellium';
+  participants: string[];
+  description: string;
+}
+
 export interface NatalChartData {
   planets: PlanetData[];
   ascendant: { sign: string; degrees: number; longitude: number };
   houseCusps: HouseCuspData[];
   aspects: Aspect[];
+  nodes: {
+    north: PlanetData;
+    south: PlanetData;
+  };
+  configurations: ChartConfiguration[];
 }
 
 const getSign = (longitude: number, swe: SwissEph): { sign: string; degrees: number } => {
@@ -137,6 +150,88 @@ const calculateAspects = (planets: PlanetData[]): Aspect[] => {
     }
   }
   return aspectsFound.sort((a, b) => a.orb - b.orb);
+};
+
+
+const calculateConfigurations = (planets: PlanetData[], aspects: Aspect[]): ChartConfiguration[] => {
+  const configurations: ChartConfiguration[] = [];
+
+  const getAspect = (a: string, b: string) => aspects.find(aspect =>
+    (aspect.planet1 === a && aspect.planet2 === b) ||
+    (aspect.planet1 === b && aspect.planet2 === a)
+  );
+
+  const isAspectType = (a: string, b: string, type: string, maxOrb: number) => {
+    const aspect = getAspect(a, b);
+    if (!aspect) return false;
+    return aspect.aspectName.toLowerCase() === type && aspect.orb <= maxOrb;
+  };
+
+  // Grand Trine (three mutual trines)
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      for (let k = j + 1; k < planets.length; k++) {
+        const a = planets[i].name;
+        const b = planets[j].name;
+        const c = planets[k].name;
+        if (planets[i].isNode || planets[j].isNode || planets[k].isNode) continue;
+        if (isAspectType(a, b, 'trine', 6) && isAspectType(a, c, 'trine', 6) && isAspectType(b, c, 'trine', 6)) {
+          configurations.push({
+            name: 'Большой тригон',
+            type: 'grand_trine',
+            participants: [a, b, c],
+            description: 'Три планеты образуют равносторонний треугольник, обеспечивая естественный поток талантов и поддержки.',
+          });
+        }
+      }
+    }
+  }
+
+  // T-Square (opposition plus two squares to a focal planet)
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const a = planets[i];
+      const b = planets[j];
+      if (a.isNode || b.isNode) continue;
+      const opposition = getAspect(a.name, b.name);
+      if (!opposition || opposition.aspectName.toLowerCase() !== 'opposition' || opposition.orb > 6) continue;
+
+      for (let k = 0; k < planets.length; k++) {
+        const apex = planets[k];
+        if (apex.name === a.name || apex.name === b.name || apex.isNode) continue;
+        if (isAspectType(apex.name, a.name, 'square', 5) && isAspectType(apex.name, b.name, 'square', 5)) {
+          configurations.push({
+            name: 'Тау-квадрат',
+            type: 't_square',
+            participants: [a.name, apex.name, b.name],
+            description: 'Две планеты в оппозиции, обе образуют квадрат с третьей, создавая зону напряжения и возможностей роста.',
+          });
+        }
+      }
+    }
+  }
+
+  // Stellium (3+ planets in same house)
+  const houseMap = new Map<number, PlanetData[]>();
+  for (const planet of planets) {
+    if (planet.isNode) continue;
+    const list = houseMap.get(planet.house) || [];
+    list.push(planet);
+    houseMap.set(planet.house, list);
+  }
+
+  for (const [house, list] of houseMap.entries()) {
+    if (list.length >= 3) {
+      configurations.push({
+        name: `Стеллиум в ${house} доме`,
+        type: 'stellium',
+        participants: list.map(p => p.name),
+        description: 'Три и более планеты в одном доме усиливают влияние этой сферы жизни и требуют осознанного управления.',
+      });
+    }
+  }
+
+  return configurations;
 };
 
 
@@ -234,7 +329,39 @@ export const calculateNatalChart = async (birthData: BirthData, city: City): Pro
     const ascendantLon = housesData.ascmc[0];
     const ascendantSignInfo = getSign(ascendantLon, swe);
 
-    const aspects = calculateAspects(planetsData);
+    // Calculate nodes
+    const northNodePos = swe.calc_ut(jd_ut, swe.SE_TRUE_NODE, swe.SEFLG_SWIEPH | swe.SEFLG_SPEED);
+    const northLongitude = northNodePos[0];
+    const northNodeSign = getSign(northLongitude, swe);
+    const northHouse = getHouseForPlanet(northLongitude, cusps);
+    const northNode: PlanetData = {
+      name: 'Северный узел',
+      sign: northNodeSign.sign,
+      degrees: northNodeSign.degrees,
+      house: northHouse,
+      longitude: northLongitude,
+      speed: northNodePos[3],
+      rulesHouses: [],
+      isNode: true,
+    };
+
+    const southLongitude = swe.degnorm(northLongitude + 180);
+    const southNodeSign = getSign(southLongitude, swe);
+    const southHouse = getHouseForPlanet(southLongitude, cusps);
+    const southNode: PlanetData = {
+      name: 'Южный узел',
+      sign: southNodeSign.sign,
+      degrees: southNodeSign.degrees,
+      house: southHouse,
+      longitude: southLongitude,
+      speed: northNodePos[3] * -1,
+      rulesHouses: [],
+      isNode: true,
+    };
+
+    const bodiesForAspects = [...planetsData, northNode, southNode];
+    const aspects = calculateAspects(bodiesForAspects);
+    const configurations = calculateConfigurations(bodiesForAspects, aspects);
 
     const chartData: NatalChartData = {
         planets: planetsData,
@@ -245,6 +372,11 @@ export const calculateNatalChart = async (birthData: BirthData, city: City): Pro
         },
         houseCusps: houseCuspsData,
         aspects: aspects,
+        nodes: {
+          north: northNode,
+          south: southNode,
+        },
+        configurations,
     };
 
     return chartData;

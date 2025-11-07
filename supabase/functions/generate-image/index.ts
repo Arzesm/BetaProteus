@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 

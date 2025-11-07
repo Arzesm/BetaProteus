@@ -14,11 +14,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Проверяем аутентификацию (пропускаем для публичного доступа)
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader) {
-    console.log('⚠️ Функция вызвана без аутентификации, но продолжаем выполнение');
-  }
+  // Публичная функция - не требует аутентификации
+  console.log('🔓 Публичная функция get-natal-chart-interpretation вызвана');
 
   if (!OPENAI_API_KEY) {
     return new Response(JSON.stringify({ error: 'Ключ OpenAI API не настроен на сервере.' }), {
@@ -217,7 +214,7 @@ File Search выполнен
 
 Объём: минимум 2000 слов (желательно 1500–3000). Если меньше — автоматически продолжайте.
 
-Структура: используйте все разделы выше
+Структура: используйте все разделы выше 
 
 Тон: спокойный, уверенный, уважительный; обращение — на «Вы».
 
@@ -226,8 +223,6 @@ File Search выполнен
 Пишите: «В подключённых материалах по этому пункту данных нет/мало; ниже — общие закономерности и безопасные рекомендации».
 
 Дальше давайте прикладной минимум, который полезен большинству людей, без ссылок на термины и жаргон.`;
-    
-    const userPrompt = `Сделай астрологический разбор для человека с такими данными:\n${chartDescription}`;
 
     let interpretation: string | null = null;
     const requestIds: string[] = [];
@@ -245,36 +240,32 @@ File Search выполнен
     if (OPENAI_ASSISTANT_ID) {
       metaUsed = 'assistants';
       metaAssistantSuffix = OPENAI_ASSISTANT_ID.slice(-6);
-      // Use Assistants API v2 when assistant id provided
+      // Assistants API v2 flow
       const threadRes = await fetch('https://api.openai.com/v1/threads', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
           'OpenAI-Beta': 'assistants=v2',
         },
         body: JSON.stringify({}),
       });
       const rid1 = threadRes.headers.get('x-request-id'); if (rid1) { console.log('OpenAI x-request-id thread:', rid1); requestIds.push(rid1); }
-      if (!threadRes.ok) {
-        const tErr = await threadRes.text();
-        throw new Error(`Assistants thread error: ${tErr}`);
-      }
+      if (!threadRes.ok) throw new Error(`Assistants thread error: ${await threadRes.text()}`);
       const thread = await threadRes.json();
 
-      // Add user message
       const msgRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
           'OpenAI-Beta': 'assistants=v2',
         },
         body: JSON.stringify({
           role: 'user',
           content: [
             { type: 'text', text: systemPrompt },
-            { type: 'text', text: userPrompt },
+            { type: 'text', text: `Проанализируй эту натальную карту:\n\n${chartDescription}` },
           ],
         }),
       });
@@ -284,40 +275,35 @@ File Search выполнен
       const runRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
           'OpenAI-Beta': 'assistants=v2',
         },
         body: JSON.stringify({ assistant_id: OPENAI_ASSISTANT_ID }),
       });
-      if (!runRes.ok) throw new Error(`Assistants run error: ${await runRes.text()}`);
       const rid3 = runRes.headers.get('x-request-id'); if (rid3) { console.log('OpenAI x-request-id run:', rid3); requestIds.push(rid3); }
+      if (!runRes.ok) throw new Error(`Assistants run error: ${await runRes.text()}`);
       const run = await runRes.json();
 
-      // Poll until completed
       let status = run.status;
-      const runId = run.id;
       let attempts = 0;
       while (['queued', 'in_progress', 'requires_action'].includes(status) && attempts < 180) {
         attempts++;
         await new Promise(r => setTimeout(r, 1000));
-        const poll = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${runId}`, {
+        const poll = await fetch(`https://api.openai.com/v1/threads/${thread.id}/runs/${run.id}`, {
           headers: {
             'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'OpenAI-Beta': 'assistants=v2',
           },
         });
-        const pollData = await poll.json();
-        status = pollData.status;
-        if (status === 'requires_action' && pollData.required_action?.type === 'submit_tool_outputs') {
-          console.log('Assistants run requires tool outputs but none configured.');
+        const data = await poll.json();
+        status = data.status;
+        if (status === 'requires_action' && data.required_action?.type === 'submit_tool_outputs') {
+          console.log('Assistants run requires tool output, but none configured.');
           break;
         }
       }
-
-      if (status !== 'completed') {
-        throw new Error(`Assistants run not completed after ${attempts}s: ${status}`);
-      }
+      if (status !== 'completed') throw new Error(`Assistants run not completed after ${attempts}s: ${status}`);
 
       const msgsRes = await fetch(`https://api.openai.com/v1/threads/${thread.id}/messages?limit=1`, {
         headers: {
@@ -327,41 +313,31 @@ File Search выполнен
       });
       const rid4 = msgsRes.headers.get('x-request-id'); if (rid4) { console.log('OpenAI x-request-id messages:', rid4); requestIds.push(rid4); }
       const msgs = await msgsRes.json();
-      const parts = msgs.data?.[0]?.content?.[0];
-      interpretation = parts?.text?.value || null;
+      interpretation = msgs.data?.[0]?.content?.[0]?.text?.value || null;
     } else {
       // Fallback to Chat Completions
-      const requestBody = {
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      };
-
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Проанализируй эту натальную карту:\n\n${chartDescription}` }
+          ],
+          max_tokens: 2000,
+          temperature: 0.7,
+        }),
       });
       const rid = response.headers.get('x-request-id'); if (rid) { console.log('OpenAI x-request-id chat:', rid); requestIds.push(rid); }
+      if (!response.ok) throw new Error(`OpenAI API error: ${response.status}`);
       const data = await response.json();
-      if (!response.ok || !data.choices || data.choices.length === 0) {
-        console.error('OpenAI API Error:', data);
-        const errorMessage = data.error?.message || 'Ошибка при получении ответа от OpenAI.';
-        return new Response(JSON.stringify({ error: errorMessage }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: response.status,
-        });
-      }
       interpretation = data.choices[0].message.content;
     }
 
-    // include request ids for observability
-    console.log('OpenAI request ids:', requestIds);
     const meta = { used: metaUsed, assistantIdSuffix: metaAssistantSuffix, apiKeyPrefix: metaKeyPrefix, apiKeySuffix: metaKeySuffix };
     console.log('Interpretation meta', meta);
 
@@ -369,12 +345,9 @@ File Search выполнен
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-    return new Response(JSON.stringify({ interpretation }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+
   } catch (error) {
-    console.error('Ошибка в серверной функции:', error);
+    console.error('Ошибка в функции:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

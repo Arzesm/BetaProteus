@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {

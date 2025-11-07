@@ -19,6 +19,8 @@ const planetIcons: { [key: string]: React.ElementType } = {
   'Уран': CircleDot,
   'Нептун': CircleDot,
   'Плутон': CircleDot,
+  'Северный узел': CircleDot,
+  'Южный узел': CircleDot,
 };
 
 const aspectDetails: { [key: string]: { name: string; color: string; symbol: string; interpretation: string } } = {
@@ -30,9 +32,9 @@ const aspectDetails: { [key: string]: { name: string; color: string; symbol: str
 };
 
 export function AspectsWidget({ aspects }: AspectsWidgetProps) {
-  const majorAspects = aspects.slice(0, 7);
+  const sortedAspects = [...aspects].sort((a, b) => a.orb - b.orb);
 
-  if (majorAspects.length === 0) {
+  if (sortedAspects.length === 0) {
     return null;
   }
 
@@ -54,7 +56,7 @@ export function AspectsWidget({ aspects }: AspectsWidgetProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {majorAspects.map((aspect, index) => {
+            {sortedAspects.map((aspect, index) => {
               const P1Icon = planetIcons[aspect.planet1] || CircleDot;
               const P2Icon = planetIcons[aspect.planet2] || CircleDot;
               const details = aspectDetails[aspect.aspectName];

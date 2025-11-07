@@ -7,14 +7,6 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 3000,
-    proxy: {
-      "/sb": {
-        target: "https://uqjyoqkejbwrcyroruku.supabase.co",
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/sb/, ""),
-      },
-    },
     fs: {
       // Allow serving files from one level up to the project root
       allow: ['..']
