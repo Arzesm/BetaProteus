@@ -1,18 +1,21 @@
-// Ensure Emscripten loader can resolve WASM/data files when using local swisseph build
+import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
+import type { BirthData } from '@/components/astrology/BirthDataForm';
+import { City } from '@/data/cities';
+import swissephWasmUrl from '../../swisseph-wasm-main/src/swisseph.wasm?url';
+import swissephDataUrl from '../../swisseph-wasm-main/src/swisseph.data?url';
+
+// Ensure Emscripten loader can resolve WASM/data files when using bundler paths
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 (globalThis as any).Module = (globalThis as any).Module || {};
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 (globalThis as any).Module.locateFile = (path: string, prefix: string) => {
-  if (path.startsWith('http') || path.startsWith('/') || path.startsWith('data:')) return path;
-  if (!path.endsWith('.wasm') && !path.endsWith('.data')) return `${prefix}${path}`;
-  return `/${path}`;
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  if (path.endsWith('.wasm')) return swissephWasmUrl;
+  if (path.endsWith('.data')) return swissephDataUrl;
+  return `${prefix}${path}`;
 };
-
-import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
-import type { BirthData } from '@/components/astrology/BirthDataForm';
-import { City } from '@/data/cities';
 
 const ZODIAC_SIGNS = [
   'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева',
