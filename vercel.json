@@ -1,21 +1,38 @@
 {
-  "routes": [
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "headers": [
     {
-      "src": "/swisseph\\.wasm",
-      "headers": { "Content-Type": "application/wasm" },
-      "continue": true
+      "source": "/swisseph.wasm",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/wasm"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
-      "src": "/swisseph\\.data",
-      "headers": { "Content-Type": "application/octet-stream" },
-      "continue": true
-    },
+      "source": "/swisseph.data",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/octet-stream"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!(?:swisseph\\.(?:wasm|data)|assets/|favicon\\.ico|placeholder\\.svg|robots\\.txt|.*\\.se1|.*\\.txt)).*)",
+      "destination": "/index.html"
     }
   ]
 }
