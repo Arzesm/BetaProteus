@@ -4,51 +4,51 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 200 50% 98%;
+    --foreground: 210 20% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 20% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 20% 15%;
 
-    --primary: 240 100% 7%; /* #000126 */
+    --primary: 200 95% 50%; /* Blue #0ea5e9 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 100% 97%;
-    --secondary-foreground: 240 100% 7%;
+    --secondary: 200 50% 95%;
+    --secondary-foreground: 210 20% 30%;
 
-    --muted: 240 100% 97%;
-    --muted-foreground: 240 100% 20%;
+    --muted: 200 30% 96%;
+    --muted-foreground: 210 10% 45%;
 
-    --accent: 240 100% 97%;
-    --accent-foreground: 240 100% 7%;
+    --accent: 190 100% 95%;
+    --accent-foreground: 190 70% 40%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 100% 90%;
-    --input: 240 100% 90%;
-    --ring: 240 100% 7%;
+    --border: 200 20% 92%;
+    --input: 200 20% 92%;
+    --ring: 200 95% 50%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 200 40% 99%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-foreground: 210 20% 30%;
 
-    --sidebar-primary: 240 100% 7%;
+    --sidebar-primary: 200 95% 50%;
 
     --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 240 100% 95%;
+    --sidebar-accent: 200 50% 96%;
 
-    --sidebar-accent-foreground: 240 100% 7%;
+    --sidebar-accent-foreground: 210 20% 30%;
 
-    --sidebar-border: 240 100% 90%;
+    --sidebar-border: 200 20% 94%;
 
-    --sidebar-ring: 240 100% 7%;
+    --sidebar-ring: 200 95% 50%;
   }
 
   .dark {
@@ -96,7 +96,33 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-sky-50 via-blue-50 to-cyan-50 text-foreground min-h-screen;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-xl shadow-blue-100/50;
+  }
+  
+  .gradient-purple-blue {
+    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
+  }
+  
+  .gradient-purple-pink {
+    @apply bg-gradient-to-r from-blue-500 to-sky-400;
+  }
+  
+  .gradient-blue-cyan {
+    @apply bg-gradient-to-r from-blue-500 to-cyan-400;
+  }
+  
+  .hover-lift {
+    @apply transition-transform duration-300 hover:-translate-y-1;
+  }
+  
+  .shadow-soft {
+    box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.15);
   }
 }
 

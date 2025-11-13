@@ -296,37 +296,42 @@ export function AstroCalendar() {
   }, [month]);
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className="glass-card rounded-3xl border-none shadow-soft overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-transparent pointer-events-none"></div>
+      <CardHeader className="pb-3 relative">
         <CardTitle className="flex items-center text-lg font-semibold">
-          <Moon className="mr-2 h-5 w-5 text-primary" />
-          Астро-календарь
+          <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl mr-3">
+            <Moon className="h-5 w-5 text-white" />
+          </div>
+          <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            Лунный календарь
+          </span>
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative">
         {/* Заголовок с датой и основной информацией */}
-        <div className="rounded-xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent p-4 border border-primary/20">
+        <div className="rounded-2xl bg-gradient-to-br from-blue-100/50 via-cyan-100/30 to-transparent p-5 border border-blue-200/50 backdrop-blur-sm">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground mb-1">Выбранная дата</p>
-              <p className="text-base font-semibold mb-3">
+              <p className="text-xs text-slate-500 mb-1 font-medium">Выбранная дата</p>
+              <p className="text-lg font-bold mb-3 text-slate-800">
                 {format(selectedDate, "d MMMM yyyy", { locale: ru })}
               </p>
               
               {/* Основная информация в строку */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
-                  <span className="text-lg">{moonData?.phaseEmoji}</span>
-                  <span className="text-sm font-medium">{moonData?.phase ?? "—"}</span>
+                <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-xl px-3 py-2 border border-blue-200/50 shadow-sm">
+                  <span className="text-xl">{moonData?.phaseEmoji}</span>
+                  <span className="text-sm font-semibold text-slate-700">{moonData?.phase ?? "—"}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
-                  <span className="text-lg">{moonData?.signEmoji}</span>
-                  <span className="text-sm font-medium">{moonData?.sign ?? "—"}</span>
+                <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-xl px-3 py-2 border border-cyan-200/50 shadow-sm">
+                  <span className="text-xl">{moonData?.signEmoji}</span>
+                  <span className="text-sm font-semibold text-slate-700">{moonData?.sign ?? "—"}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
-                  <span className="text-lg">🌕</span>
-                  <span className="text-sm font-medium">{moonData ? `${moonData.illumination}%` : "—"}</span>
+                <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm rounded-xl px-3 py-2 border border-sky-200/50 shadow-sm">
+                  <span className="text-xl">🌕</span>
+                  <span className="text-sm font-semibold text-slate-700">{moonData ? `${moonData.illumination}%` : "—"}</span>
                 </div>
               </div>
             </div>
@@ -334,10 +339,10 @@ export function AstroCalendar() {
           
           {/* Прогресс-бар освещённости */}
           {moonData && (
-            <div className="mt-3">
-              <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden backdrop-blur-sm">
+            <div className="mt-4">
+              <div className="w-full bg-white/50 rounded-full h-2.5 overflow-hidden backdrop-blur-sm border border-blue-200/30">
                 <div 
-                  className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500 ease-out"
+                  className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-sky-400 rounded-full transition-all duration-500 ease-out shadow-sm"
                   style={{ width: `${moonData.illumination}%` }}
                 />
               </div>
@@ -354,21 +359,21 @@ export function AstroCalendar() {
           
           {/* Ретроградные планеты для выбранной даты */}
           {(isRetrograde(selectedDate, 'mercury') || isRetrograde(selectedDate, 'venus') || isRetrograde(selectedDate, 'mars')) && (
-            <div className="mt-3 pt-3 border-t border-border/30">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Ретроградные планеты:</p>
-              <div className="flex flex-wrap gap-1.5">
+            <div className="mt-4 pt-4 border-t border-blue-200/50">
+              <p className="text-xs font-semibold text-slate-600 mb-2.5">Ретроградные планеты:</p>
+              <div className="flex flex-wrap gap-2">
                 {isRetrograde(selectedDate, 'mercury') && (
-                  <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">
+                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-blue-50 to-cyan-100 text-blue-700 border-blue-200 px-3 py-1.5 rounded-xl shadow-sm">
                     ☿ Меркурий ℞
                   </Badge>
                 )}
                 {isRetrograde(selectedDate, 'venus') && (
-                  <Badge variant="secondary" className="text-xs bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20">
+                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-pink-50 to-pink-100 text-pink-700 border-pink-200 px-3 py-1.5 rounded-xl shadow-sm">
                     ♀ Венера ℞
                   </Badge>
                 )}
                 {isRetrograde(selectedDate, 'mars') && (
-                  <Badge variant="secondary" className="text-xs bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                  <Badge variant="secondary" className="text-xs bg-gradient-to-r from-red-50 to-red-100 text-red-700 border-red-200 px-3 py-1.5 rounded-xl shadow-sm">
                     ♂ Марс ℞
                   </Badge>
                 )}
@@ -378,7 +383,7 @@ export function AstroCalendar() {
         </div>
 
         {/* Календарь */}
-        <div className="rounded-xl border border-border bg-muted/30 p-3">
+        <div className="rounded-2xl bg-white/60 backdrop-blur-sm border border-blue-200/50 p-4 shadow-sm">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -395,49 +400,49 @@ export function AstroCalendar() {
             }}
             modifiersClassNames={{
               fullMoon:
-                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-amber-500 after:shadow-sm",
+                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-amber-400 after:shadow-md",
               newMoon:
-                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-slate-600 after:shadow-sm",
+                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-slate-500 after:shadow-md",
               mercuryRetrograde:
-                "relative before:content-[''] before:absolute before:top-1 before:left-1/2 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-blue-500 before:shadow-sm",
+                "relative before:content-[''] before:absolute before:top-1 before:left-1/2 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-blue-500 before:shadow-md",
               venusRetrograde:
-                "relative before:content-[''] before:absolute before:top-1 before:right-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-pink-500 before:shadow-sm",
+                "relative before:content-[''] before:absolute before:top-1 before:right-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-pink-500 before:shadow-md",
               marsRetrograde:
-                "relative before:content-[''] before:absolute before:top-1 before:left-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-red-600 before:shadow-sm",
+                "relative before:content-[''] before:absolute before:top-1 before:left-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-red-500 before:shadow-md",
             } as any}
             className="w-full"
           />
           
           {/* Легенда */}
-          <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/50">
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-              <span className="text-xs text-muted-foreground">Полнолуние</span>
+          <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-blue-200/50">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gradient-to-r from-amber-50 to-yellow-50">
+              <div className="w-2 h-2 rounded-full bg-amber-400 shadow-sm"></div>
+              <span className="text-xs text-slate-600 font-medium">Полнолуние</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
-              <span className="text-xs text-muted-foreground">Новолуние</span>
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gradient-to-r from-slate-50 to-gray-50">
+              <div className="w-2 h-2 rounded-full bg-slate-500 shadow-sm"></div>
+              <span className="text-xs text-slate-600 font-medium">Новолуние</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-              <span className="text-xs text-muted-foreground">Ретр. ☿ Меркурий</span>
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
+              <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm"></div>
+              <span className="text-xs text-slate-600 font-medium">☿ Меркурий</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-pink-500"></div>
-              <span className="text-xs text-muted-foreground">Ретр. ♀ Венера</span>
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gradient-to-r from-pink-50 to-rose-50">
+              <div className="w-2 h-2 rounded-full bg-pink-500 shadow-sm"></div>
+              <span className="text-xs text-slate-600 font-medium">♀ Венера</span>
             </div>
-            <div className="flex items-center gap-1.5 col-span-2 justify-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
-              <span className="text-xs text-muted-foreground">Ретр. ♂ Марс</span>
+            <div className="flex items-center gap-2 col-span-2 justify-center px-2 py-1.5 rounded-lg bg-gradient-to-r from-red-50 to-orange-50">
+              <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div>
+              <span className="text-xs text-slate-600 font-medium">♂ Марс</span>
             </div>
           </div>
         </div>
 
         {/* Индикатор загрузки */}
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 py-2">
-            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-muted-foreground">Обновляем данные…</p>
+          <div className="flex items-center justify-center gap-3 py-3">
+            <div className="w-4 h-4 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs text-slate-600 font-medium">Обновляем данные…</p>
           </div>
         )}
       </CardContent>

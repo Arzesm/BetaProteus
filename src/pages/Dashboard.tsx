@@ -102,22 +102,29 @@ const Dashboard = () => {
         >
           {/* Main column */}
           <div className="lg:col-span-2 space-y-8">
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
               {isLoadingChart ? (
-                <Skeleton className="h-64 w-full" />
+                <div className="glass-card rounded-3xl p-8 h-64 flex items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
               ) : latestChart ? (
                 <DailyInterpretationWidget chart={latestChart} />
               ) : (
-                <Card className="bg-gradient-to-br from-primary/10 to-background">
-                  <CardHeader>
+                <Card className="glass-card rounded-3xl border-none shadow-soft overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-transparent"></div>
+                  <CardHeader className="relative">
                     <CardTitle className="flex items-center text-xl">
-                      <Sparkles className="mr-3 h-6 w-6 text-[#000126]" />
-                      Ваш персональный прогноз
+                      <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-2xl mr-3">
+                        <Sparkles className="h-6 w-6 text-white" />
+                      </div>
+                      <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                        Ваш персональный прогноз
+                      </span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p>Рассчитайте и сохраните свою натальную карту, чтобы получать персональный прогноз на каждый день.</p>
-                    <Button asChild className="mt-4">
+                  <CardContent className="relative">
+                    <p className="text-slate-600 mb-6">Рассчитайте и сохраните свою натальную карту, чтобы получать персональный прогноз на каждый день.</p>
+                    <Button asChild className="gradient-purple-blue text-white border-none hover:shadow-lg transition-all duration-300 rounded-2xl px-8">
                       <Link to="/astrology">Рассчитать карту</Link>
                     </Button>
                   </CardContent>
@@ -125,40 +132,46 @@ const Dashboard = () => {
               )}
             </motion.div>
 
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
-              <Card>
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
+              <Card className="glass-card rounded-3xl border-none shadow-soft">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <BookOpen className="mr-2 h-5 w-5" />
-                    Последние сны
+                    <div className="p-2.5 bg-gradient-to-br from-sky-500 to-blue-500 rounded-xl mr-3">
+                      <BookOpen className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-lg">Последние сны</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
                   {isLoadingDreams ? (
                     <div className="space-y-3">
-                      <Skeleton className="h-16 w-full" />
-                      <Skeleton className="h-16 w-full" />
+                      <div className="h-20 w-full bg-gradient-to-r from-blue-100 to-cyan-100 rounded-2xl animate-pulse"></div>
+                      <div className="h-20 w-full bg-gradient-to-r from-sky-100 to-blue-100 rounded-2xl animate-pulse"></div>
                     </div>
                   ) : recentDreams.length > 0 ? (
                     <div className="space-y-3">
-                      {recentDreams.map((dream) => (
-                        <div key={dream.id} className="group relative overflow-hidden rounded-lg border border-border/50 bg-gradient-to-r from-background to-muted/20 p-4 transition-all duration-300 hover:border-[#000126]/30 hover:shadow-md">
+                      {recentDreams.map((dream, index) => (
+                        <div key={dream.id} className={`group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:shadow-lg cursor-pointer bg-gradient-to-br ${
+                          index % 2 === 0 
+                            ? 'from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100' 
+                            : 'from-sky-50 to-blue-50 hover:from-sky-100 hover:to-blue-100'
+                        }`}>
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm truncate group-hover:text-[#000126] transition-colors">
+                              <h4 className="font-semibold text-sm truncate text-slate-800 group-hover:text-blue-700 transition-colors">
                                 {dream.title}
                               </h4>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-slate-500 mt-1">
                                 {format(new Date(dream.date), "d MMM yyyy", { locale: ru })}
                               </p>
-                              <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+                              <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
                                 {dream.interpretation.length > 120 
                                   ? `${dream.interpretation.substring(0, 120)}...` 
                                   : dream.interpretation}
                               </p>
                             </div>
                             <div className="ml-3 flex-shrink-0">
-                              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-60 group-hover:opacity-100 transition-opacity"></div>
+                              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full opacity-60 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300"></div>
                             </div>
                           </div>
                         </div>
@@ -170,7 +183,7 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">Здесь будут отображаться ваши последние сны</p>
                     </div>
                   )}
-                  <Button variant="outline" asChild className="w-full mt-4 hover:bg-[#000126]/5 hover:border-[#000126]/30 transition-all duration-300">
+                  <Button variant="outline" asChild className="w-full mt-4 rounded-2xl border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300">
                     <Link to="/dreams" className="flex items-center justify-center">
                       <BookOpen className="mr-2 h-4 w-4" />
                       Перейти в дневник снов
@@ -182,40 +195,43 @@ const Dashboard = () => {
           </div>
 
           {/* Sidebar column */}
-          <div className="space-y-8">
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
+          <div className="space-y-6">
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
               <AstroCalendar />
             </motion.div>
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
               <MoonPhaseSummary />
             </motion.div>
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
               <RetrospectiveWidget />
             </motion.div>
-            <motion.div variants={cardAnimation} whileHover={cardHover}>
-              <Card>
-                <CardHeader>
+            <motion.div variants={cardAnimation} whileHover={cardHover} className="hover-lift">
+              <Card className="glass-card rounded-3xl border-none shadow-soft overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-transparent"></div>
+                <CardHeader className="relative">
                   <CardTitle className="flex items-center text-lg">
-                    <Star className="mr-2 h-5 w-5 text-yellow-500" />
+                    <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl mr-3">
+                      <Star className="h-5 w-5 text-white" />
+                    </div>
                     Астро-ключи
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-muted-foreground"><Sun className="mr-2 h-4 w-4" />Солнце</span>
-                    <span className="font-semibold">Телец</span>
+                <CardContent className="space-y-3 relative">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 transition-all duration-300">
+                    <span className="flex items-center text-slate-600"><Sun className="mr-2 h-4 w-4 text-amber-500" />Солнце</span>
+                    <span className="font-semibold text-slate-800">Телец</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-muted-foreground"><Moon className="mr-2 h-4 w-4" />Луна</span>
-                    <span className="font-semibold">Весы</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all duration-300">
+                    <span className="flex items-center text-slate-600"><Moon className="mr-2 h-4 w-4 text-blue-500" />Луна</span>
+                    <span className="font-semibold text-slate-800">Весы</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-muted-foreground"><Sunrise className="mr-2 h-4 w-4" />Асцендент</span>
-                    <span className="font-semibold">Весы</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-sky-50 to-blue-50 hover:from-sky-100 hover:to-blue-100 transition-all duration-300">
+                    <span className="flex items-center text-slate-600"><Sunrise className="mr-2 h-4 w-4 text-sky-500" />Асцендент</span>
+                    <span className="font-semibold text-slate-800">Весы</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center text-muted-foreground"><Star className="mr-2 h-4 w-4 text-red-500" />Марс</span>
-                    <span className="font-semibold">Лев</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 transition-all duration-300">
+                    <span className="flex items-center text-slate-600"><Star className="mr-2 h-4 w-4 text-red-500" />Марс</span>
+                    <span className="font-semibold text-slate-800">Лев</span>
                   </div>
                 </CardContent>
               </Card>
