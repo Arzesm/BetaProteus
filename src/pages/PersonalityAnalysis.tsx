@@ -156,7 +156,7 @@ const PersonalityAnalysis = () => {
       transition={{ duration: 0.4 }}
     >
       <motion.div 
-        className="space-y-8"
+        className="space-y-8 max-w-7xl mx-auto"
         variants={staggerContainer}
         initial="initial"
         animate="animate"

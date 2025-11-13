@@ -243,7 +243,7 @@ ${calculatedChart.configurations && calculatedChart.configurations.length > 0 ? 
   };
 
   return (
-    <motion.div variants={pageAnimation} initial="initial" animate="animate" exit="exit" className="space-y-8">
+    <motion.div variants={pageAnimation} initial="initial" animate="animate" exit="exit" className="space-y-8 max-w-7xl mx-auto">
       <AnimatePresence mode="wait">
         {activeChart ? (
           <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">

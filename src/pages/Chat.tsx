@@ -19,7 +19,7 @@ const Chat = () => {
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4 }}
-      className="space-y-8 h-[calc(100vh-200px)]"
+      className="space-y-8 h-[calc(100vh-200px)] max-w-4xl mx-auto"
     >
       <div>
         <h1 className="text-3xl font-bold">Чат с Протеем</h1>

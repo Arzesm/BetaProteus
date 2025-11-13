@@ -376,7 +376,7 @@ const Dreams = () => {
       animate="animate"
       exit="exit"
       transition={{ duration: 0.4 }}
-      className="space-y-8"
+      className="space-y-8 max-w-7xl mx-auto"
     >
       <div>
         <h1 className="text-3xl font-bold">Толкование снов</h1>

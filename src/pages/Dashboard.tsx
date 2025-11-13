@@ -86,7 +86,7 @@ const Dashboard = () => {
       exit="exit"
       transition={{ duration: 0.4 }}
     >
-      <div className="space-y-8">
+      <div className="space-y-8 max-w-7xl mx-auto">
         <div>
           <h1 className="text-3xl font-bold">Главный экран</h1>
           <p className="text-muted-foreground">

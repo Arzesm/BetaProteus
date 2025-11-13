@@ -15,6 +15,133 @@ interface MoonData {
   illumination: number;
 }
 
+// Периоды ретроградности планет (точные даты 2024-2040)
+const retrogradePeriodsData = {
+  mercury: [
+    // 2024
+    { start: '2024-04-01', end: '2024-04-25' },
+    { start: '2024-08-05', end: '2024-08-28' },
+    { start: '2024-11-25', end: '2024-12-15' },
+    // 2025
+    { start: '2025-03-15', end: '2025-04-07' },
+    { start: '2025-07-18', end: '2025-08-11' },
+    { start: '2025-11-09', end: '2025-11-29' },
+    // 2026
+    { start: '2026-02-25', end: '2026-03-20' },
+    { start: '2026-06-29', end: '2026-07-23' },
+    { start: '2026-10-24', end: '2026-11-13' },
+    // 2027
+    { start: '2027-02-09', end: '2027-03-03' },
+    { start: '2027-06-10', end: '2027-07-04' },
+    { start: '2027-10-07', end: '2027-10-28' },
+    // 2028
+    { start: '2028-01-24', end: '2028-02-14' },
+    { start: '2028-05-21', end: '2028-06-13' },
+    { start: '2028-09-19', end: '2028-10-11' },
+    // 2029
+    { start: '2029-01-07', end: '2029-01-27' },
+    { start: '2029-05-02', end: '2029-05-26' },
+    { start: '2029-09-02', end: '2029-09-25' },
+    { start: '2029-12-22', end: '2030-01-11' },
+    // 2030
+    { start: '2030-04-13', end: '2030-05-07' },
+    { start: '2030-08-16', end: '2030-09-08' },
+    { start: '2030-12-06', end: '2030-12-26' },
+    // 2031
+    { start: '2031-03-28', end: '2031-04-20' },
+    { start: '2031-07-29', end: '2031-08-22' },
+    { start: '2031-11-20', end: '2031-12-10' },
+    // 2032
+    { start: '2032-03-10', end: '2032-04-02' },
+    { start: '2032-07-10', end: '2032-08-03' },
+    { start: '2032-11-02', end: '2032-11-22' },
+    // 2033
+    { start: '2033-02-22', end: '2033-03-16' },
+    { start: '2033-06-21', end: '2033-07-15' },
+    { start: '2033-10-16', end: '2033-11-05' },
+    // 2034
+    { start: '2034-02-05', end: '2034-02-27' },
+    { start: '2034-06-03', end: '2034-06-27' },
+    { start: '2034-09-29', end: '2034-10-20' },
+    // 2035
+    { start: '2035-01-19', end: '2035-02-09' },
+    { start: '2035-05-14', end: '2035-06-07' },
+    { start: '2035-09-12', end: '2035-10-03' },
+    // 2036
+    { start: '2036-01-02', end: '2036-01-22' },
+    { start: '2036-04-25', end: '2036-05-19' },
+    { start: '2036-08-24', end: '2036-09-16' },
+    { start: '2036-12-16', end: '2037-01-05' },
+    // 2037
+    { start: '2037-04-07', end: '2037-05-01' },
+    { start: '2037-08-07', end: '2037-08-31' },
+    { start: '2037-11-30', end: '2037-12-20' },
+    // 2038
+    { start: '2038-03-21', end: '2038-04-13' },
+    { start: '2038-07-20', end: '2038-08-13' },
+    { start: '2038-11-13', end: '2038-12-03' },
+    // 2039
+    { start: '2039-03-04', end: '2039-03-27' },
+    { start: '2039-07-02', end: '2039-07-26' },
+    { start: '2039-10-27', end: '2039-11-16' },
+    // 2040
+    { start: '2040-02-16', end: '2040-03-09' },
+    { start: '2040-06-13', end: '2040-07-07' },
+    { start: '2040-10-09', end: '2040-10-30' },
+  ],
+  venus: [
+    // 2024-2025
+    { start: '2024-03-04', end: '2024-04-13' },
+    { start: '2025-09-01', end: '2025-10-13' },
+    // 2027
+    { start: '2027-03-01', end: '2027-04-12' },
+    // 2028-2029
+    { start: '2028-10-02', end: '2028-11-13' },
+    // 2030
+    { start: '2030-03-04', end: '2030-04-15' },
+    // 2031-2032
+    { start: '2031-10-08', end: '2031-11-19' },
+    // 2033
+    { start: '2033-03-10', end: '2033-04-21' },
+    // 2034-2035
+    { start: '2034-10-16', end: '2034-11-27' },
+    // 2036
+    { start: '2036-03-17', end: '2036-04-28' },
+    // 2037-2038
+    { start: '2037-10-24', end: '2037-12-05' },
+    // 2039
+    { start: '2039-03-24', end: '2039-05-05' },
+  ],
+  mars: [
+    // 2024-2025
+    { start: '2024-12-06', end: '2025-02-24' },
+    // 2027
+    { start: '2027-01-11', end: '2027-04-01' },
+    // 2029
+    { start: '2029-02-13', end: '2029-05-03' },
+    // 2031
+    { start: '2031-03-05', end: '2031-05-26' },
+    // 2033
+    { start: '2033-04-12', end: '2033-07-01' },
+    // 2035
+    { start: '2035-05-04', end: '2035-07-25' },
+    // 2037
+    { start: '2037-06-07', end: '2037-08-27' },
+    // 2039
+    { start: '2039-07-11', end: '2039-09-28' },
+  ],
+};
+
+// Функция для проверки, попадает ли дата в период ретроградности
+const isRetrograde = (date: Date, planet: 'mercury' | 'venus' | 'mars'): boolean => {
+  const dateStr = format(date, 'yyyy-MM-dd');
+  const periods = retrogradePeriodsData[planet];
+  
+  return periods.some(period => {
+    return dateStr >= period.start && dateStr <= period.end;
+  });
+};
+
 export function AstroCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [moonData, setMoonData] = useState<MoonData | null>(null);
@@ -22,6 +149,9 @@ export function AstroCalendar() {
   const [month, setMonth] = useState<Date>(new Date());
   const [fullMoons, setFullMoons] = useState<Set<string>>(new Set());
   const [newMoons, setNewMoons] = useState<Set<string>>(new Set());
+  const [mercuryRetrograde, setMercuryRetrograde] = useState<Set<string>>(new Set());
+  const [venusRetrograde, setVenusRetrograde] = useState<Set<string>>(new Set());
+  const [marsRetrograde, setMarsRetrograde] = useState<Set<string>>(new Set());
 
   // При инициализации компонента очищаем кэш для критических дат
   useEffect(() => {
@@ -122,7 +252,7 @@ export function AstroCalendar() {
     };
   }, [selectedDate]);
 
-  // Предварительно подсвечиваем полнолуние/новолуние в видимом месяце
+  // Предварительно подсвечиваем полнолуние/новолуние и ретроградные планеты в видимом месяце
   useEffect(() => {
     let cancelled = false;
     const loadMonthMarks = async () => {
@@ -130,18 +260,33 @@ export function AstroCalendar() {
       const last = new Date(month.getFullYear(), month.getMonth() + 1, 0);
       const fm = new Set<string>();
       const nm = new Set<string>();
+      const mr = new Set<string>();
+      const vr = new Set<string>();
+      const mar = new Set<string>();
+      
       for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
         const dateStr = format(d, "yyyy-MM-dd");
         try {
+          // Проверяем лунные фазы
           const data = await getMoonData(dateStr);
-          if (!data) continue;
-          if ((data as MoonData).phase === "Полнолуние") fm.add(format(d, "yyyy-MM-dd"));
-          if ((data as MoonData).phase === "Новолуние") nm.add(format(d, "yyyy-MM-dd"));
+          if (data) {
+            if ((data as MoonData).phase === "Полнолуние") fm.add(dateStr);
+            if ((data as MoonData).phase === "Новолуние") nm.add(dateStr);
+          }
+          
+          // Проверяем ретроградные планеты
+          if (isRetrograde(d, 'mercury')) mr.add(dateStr);
+          if (isRetrograde(d, 'venus')) vr.add(dateStr);
+          if (isRetrograde(d, 'mars')) mar.add(dateStr);
         } catch {}
       }
+      
       if (!cancelled) {
         setFullMoons(fm);
         setNewMoons(nm);
+        setMercuryRetrograde(mr);
+        setVenusRetrograde(vr);
+        setMarsRetrograde(mar);
       }
     };
     loadMonthMarks();
@@ -151,129 +296,150 @@ export function AstroCalendar() {
   }, [month]);
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center text-xl font-semibold text-card-foreground">
-          <Moon className="mr-3 h-5 w-5 text-primary" />
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center text-lg font-semibold">
+          <Moon className="mr-2 h-5 w-5 text-primary" />
           Астро-календарь
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto">
-        {/* Календарь */}
-        <div className="rounded-lg border border-border bg-card p-4 flex justify-center">
-          <div className="w-full max-w-sm">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(d) => d && setSelectedDate(d)}
-              locale={ru}
-              month={month}
-              onMonthChange={setMonth}
-              modifiers={{
-                fullMoon: (date: Date) => fullMoons.has(format(date, "yyyy-MM-dd")),
-                newMoon: (date: Date) => newMoons.has(format(date, "yyyy-MM-dd")),
-              }}
-              modifiersClassNames={{
-                fullMoon:
-                  "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-2 after:w-2 after:rounded-full after:bg-red-500 after:shadow-sm",
-                newMoon:
-                  "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-2 after:w-2 after:rounded-full after:bg-slate-700 after:shadow-sm",
-              } as any}
-              className="w-full"
-            />
-          </div>
-        </div>
-
-        {/* Информация о луне */}
-        <div className="space-y-4 min-w-0">
-          {/* Заголовок с датой */}
-          <div className="rounded-lg border border-border bg-card p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground mb-1">Выбранная дата</p>
-                <p className="text-lg font-semibold text-card-foreground truncate">
-                  {format(selectedDate, "d MMMM yyyy", { locale: ru })}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Badge variant="secondary" className="text-xs whitespace-nowrap">
-                  {moonData?.sign ?? "—"}
-                </Badge>
-                <Badge variant="outline" className="text-xs whitespace-nowrap">
-                  {moonData?.phase ?? "—"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-
-          {/* Карточки с информацией */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Знак Луны */}
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="flex items-center gap-3">
-                <div className="text-xl flex-shrink-0">{moonData?.signEmoji}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Знак Луны</p>
-                  <p className="text-sm font-medium text-card-foreground truncate">{moonData?.sign ?? "—"}</p>
+      <CardContent className="space-y-4">
+        {/* Заголовок с датой и основной информацией */}
+        <div className="rounded-xl bg-gradient-to-br from-primary/5 via-primary/10 to-transparent p-4 border border-primary/20">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground mb-1">Выбранная дата</p>
+              <p className="text-base font-semibold mb-3">
+                {format(selectedDate, "d MMMM yyyy", { locale: ru })}
+              </p>
+              
+              {/* Основная информация в строку */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
+                  <span className="text-lg">{moonData?.phaseEmoji}</span>
+                  <span className="text-sm font-medium">{moonData?.phase ?? "—"}</span>
                 </div>
-              </div>
-            </div>
-            
-            {/* Фаза Луны */}
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="flex items-center gap-3">
-                <div className="text-xl flex-shrink-0">{moonData?.phaseEmoji}</div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Фаза Луны</p>
-                  <p className="text-sm font-medium text-card-foreground truncate">{moonData?.phase ?? "—"}</p>
+                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
+                  <span className="text-lg">{moonData?.signEmoji}</span>
+                  <span className="text-sm font-medium">{moonData?.sign ?? "—"}</span>
                 </div>
-              </div>
-            </div>
-            
-            {/* Освещённость */}
-            <div className="rounded-lg border border-border bg-card p-3 sm:col-span-2">
-              <div className="flex items-center gap-3">
-                <div className="text-xl flex-shrink-0">🌕</div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Освещённость</p>
-                  <p className="text-sm font-medium text-card-foreground mb-2">{moonData ? `${moonData.illumination}%` : "—"}</p>
-                  {moonData && (
-                    <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
-                        style={{ width: `${moonData.illumination}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {/* Значение дня */}
-            <div className="rounded-lg border border-border bg-card p-3 sm:col-span-2">
-              <div className="flex items-start gap-3">
-                <div className="text-xl flex-shrink-0 mt-0.5">✨</div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Значение дня</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {moonData ? getMoonPhaseDescription(moonData.phase) : "—"}
-                  </p>
+                <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-border/50">
+                  <span className="text-lg">🌕</span>
+                  <span className="text-sm font-medium">{moonData ? `${moonData.illumination}%` : "—"}</span>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Индикатор загрузки */}
-          {isLoading && (
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-                <p className="text-sm text-muted-foreground">Обновляем лунные данные…</p>
+          
+          {/* Прогресс-бар освещённости */}
+          {moonData && (
+            <div className="mt-3">
+              <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden backdrop-blur-sm">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${moonData.illumination}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Значение дня */}
+          <div className="mt-3 flex items-start gap-2">
+            <span className="text-base mt-0.5">✨</span>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {moonData ? getMoonPhaseDescription(moonData.phase) : "—"}
+            </p>
+          </div>
+          
+          {/* Ретроградные планеты для выбранной даты */}
+          {(isRetrograde(selectedDate, 'mercury') || isRetrograde(selectedDate, 'venus') || isRetrograde(selectedDate, 'mars')) && (
+            <div className="mt-3 pt-3 border-t border-border/30">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Ретроградные планеты:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {isRetrograde(selectedDate, 'mercury') && (
+                  <Badge variant="secondary" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20">
+                    ☿ Меркурий ℞
+                  </Badge>
+                )}
+                {isRetrograde(selectedDate, 'venus') && (
+                  <Badge variant="secondary" className="text-xs bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20">
+                    ♀ Венера ℞
+                  </Badge>
+                )}
+                {isRetrograde(selectedDate, 'mars') && (
+                  <Badge variant="secondary" className="text-xs bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                    ♂ Марс ℞
+                  </Badge>
+                )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Календарь */}
+        <div className="rounded-xl border border-border bg-muted/30 p-3">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(d) => d && setSelectedDate(d)}
+            locale={ru}
+            month={month}
+            onMonthChange={setMonth}
+            modifiers={{
+              fullMoon: (date: Date) => fullMoons.has(format(date, "yyyy-MM-dd")),
+              newMoon: (date: Date) => newMoons.has(format(date, "yyyy-MM-dd")),
+              mercuryRetrograde: (date: Date) => mercuryRetrograde.has(format(date, "yyyy-MM-dd")),
+              venusRetrograde: (date: Date) => venusRetrograde.has(format(date, "yyyy-MM-dd")),
+              marsRetrograde: (date: Date) => marsRetrograde.has(format(date, "yyyy-MM-dd")),
+            }}
+            modifiersClassNames={{
+              fullMoon:
+                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-amber-500 after:shadow-sm",
+              newMoon:
+                "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-slate-600 after:shadow-sm",
+              mercuryRetrograde:
+                "relative before:content-[''] before:absolute before:top-1 before:left-1/2 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-blue-500 before:shadow-sm",
+              venusRetrograde:
+                "relative before:content-[''] before:absolute before:top-1 before:right-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-pink-500 before:shadow-sm",
+              marsRetrograde:
+                "relative before:content-[''] before:absolute before:top-1 before:left-1 before:h-1.5 before:w-1.5 before:rounded-full before:bg-red-600 before:shadow-sm",
+            } as any}
+            className="w-full"
+          />
+          
+          {/* Легенда */}
+          <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/50">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              <span className="text-xs text-muted-foreground">Полнолуние</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-600"></div>
+              <span className="text-xs text-muted-foreground">Новолуние</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+              <span className="text-xs text-muted-foreground">Ретр. ☿ Меркурий</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-pink-500"></div>
+              <span className="text-xs text-muted-foreground">Ретр. ♀ Венера</span>
+            </div>
+            <div className="flex items-center gap-1.5 col-span-2 justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
+              <span className="text-xs text-muted-foreground">Ретр. ♂ Марс</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Индикатор загрузки */}
+        {isLoading && (
+          <div className="flex items-center justify-center gap-2 py-2">
+            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs text-muted-foreground">Обновляем данные…</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

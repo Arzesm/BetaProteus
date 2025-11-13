@@ -231,6 +231,19 @@ export function clearMoonDataCacheForDate(date: string): void {
   console.log(`🗑️ Кэш очищен для даты: ${date}`);
 }
 
+export function clearCriticalDatesCache(): void {
+  // В упрощенной версии просто очищаем весь кэш
+  clearMoonDataCache();
+  console.log('🗑️ Кэш критических дат очищен');
+}
+
+export function getCacheStats(): { size: number; entries: string[] } {
+  return {
+    size: moonDataCache.size,
+    entries: Array.from(moonDataCache.keys())
+  };
+}
+
 // Экспорт для тестирования
 if (typeof window !== 'undefined') {
   (window as any).testMoonPhase = async (date: string) => {
@@ -244,5 +257,11 @@ if (typeof window !== 'undefined') {
   (window as any).clearAllMoonCache = () => {
     clearMoonDataCache();
     console.log('✅ Весь кэш очищен');
+  };
+  
+  (window as any).getMoonCacheInfo = () => {
+    const info = getCacheStats();
+    console.log('📊 Информация о кэше:', info);
+    return info;
   };
 }
