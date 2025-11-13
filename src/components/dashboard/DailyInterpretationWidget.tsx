@@ -3,11 +3,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-// Use our patched version that passes window.Module config
-import SwissEph from '../../../swisseph-wasm-main/src/swisseph.js';
 import { NatalChartData } from "@/services/astrologyService";
 import { toast } from "sonner";
 import { format } from "date-fns";
+
+// Lazy load SwissEph to avoid loading heavy WASM files on initial page load
+let SwissEph: any = null;
+let swissEphPromise: Promise<any> | null = null;
+
+async function getSwissEph() {
+  if (SwissEph) return SwissEph;
+  if (swissEphPromise) return swissEphPromise;
+  
+  swissEphPromise = import('../../../swisseph-wasm-main/src/swisseph.js').then(module => {
+    SwissEph = module.default;
+    return SwissEph;
+  });
+  
+  return swissEphPromise;
+}
 
 interface SavedChart {
   id: string;
@@ -54,7 +68,9 @@ export function DailyInterpretationWidget({ chart }: DailyInterpretationWidgetPr
         }
 
         // 2. If no valid cache, generate new interpretation
-        const swe = new SwissEph();
+        // Lazy load SwissEph
+        const SwissEphClass = await getSwissEph();
+        const swe = new SwissEphClass();
         await swe.initSwissEph();
 
         const now = new Date();

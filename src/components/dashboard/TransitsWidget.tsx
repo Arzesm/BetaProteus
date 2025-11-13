@@ -7,9 +7,23 @@ import { Zap, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-// Use our patched version that passes window.Module config
-import SwissEph from '../../../swisseph-wasm-main/src/swisseph.js';
 import { NatalChartData } from "@/services/astrologyService";
+
+// Lazy load SwissEph to avoid loading heavy WASM files on initial page load
+let SwissEph: any = null;
+let swissEphPromise: Promise<any> | null = null;
+
+async function getSwissEph() {
+  if (SwissEph) return SwissEph;
+  if (swissEphPromise) return swissEphPromise;
+  
+  swissEphPromise = import('../../../swisseph-wasm-main/src/swisseph.js').then(module => {
+    SwissEph = module.default;
+    return SwissEph;
+  });
+  
+  return swissEphPromise;
+}
 
 interface SavedChart {
   id: string;
@@ -59,59 +73,66 @@ export function TransitsWidget() {
     if (chart) {
       const calculateTransits = async () => {
         setIsCalculating(true);
-        const swe = new SwissEph();
-        await swe.initSwissEph();
-
         try {
-          const now = new Date();
-          const jd_ut = swe.julday(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours() + now.getUTCMinutes() / 60);
+          // Lazy load SwissEph
+          const SwissEphClass = await getSwissEph();
+          const swe = new SwissEphClass();
+          await swe.initSwissEph();
 
-          const transitingPlanets = [
-            { id: swe.SE_SUN, name: 'Солнце' }, { id: swe.SE_MOON, name: 'Луна' },
-            { id: swe.SE_MERCURY, name: 'Меркурий' }, { id: swe.SE_VENUS, name: 'Венера' },
-            { id: swe.SE_MARS, name: 'Марс' }, { id: swe.SE_JUPITER, name: 'Юпитер' },
-            { id: swe.SE_SATURN, name: 'Сатурн' }, { id: swe.SE_URANUS, name: 'Уран' },
-            { id: swe.SE_NEPTUNE, name: 'Нептун' }, { id: swe.SE_PLUTO, name: 'Плутон' },
-          ];
+          try {
+            const now = new Date();
+            const jd_ut = swe.julday(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours() + now.getUTCMinutes() / 60);
 
-          const currentPositions = transitingPlanets.map(p => ({
-            ...p,
-            longitude: swe.calc_ut(jd_ut, p.id, swe.SEFLG_SWIEPH)[0]
-          }));
+            const transitingPlanets = [
+              { id: swe.SE_SUN, name: 'Солнце' }, { id: swe.SE_MOON, name: 'Луна' },
+              { id: swe.SE_MERCURY, name: 'Меркурий' }, { id: swe.SE_VENUS, name: 'Венера' },
+              { id: swe.SE_MARS, name: 'Марс' }, { id: swe.SE_JUPITER, name: 'Юпитер' },
+              { id: swe.SE_SATURN, name: 'Сатурн' }, { id: swe.SE_URANUS, name: 'Уран' },
+              { id: swe.SE_NEPTUNE, name: 'Нептун' }, { id: swe.SE_PLUTO, name: 'Плутон' },
+            ];
 
-          const natalPlanets = chart.chart_data.planets;
-          const foundAspects: TransitAspect[] = [];
+            const currentPositions = transitingPlanets.map(p => ({
+              ...p,
+              longitude: swe.calc_ut(jd_ut, p.id, swe.SEFLG_SWIEPH)[0]
+            }));
 
-          const aspectTypes = [
-            { name: 'Conjunction', angle: 0, orb: 2 },
-            { name: 'Opposition', angle: 180, orb: 2 },
-            { name: 'Trine', angle: 120, orb: 2 },
-            { name: 'Square', angle: 90, orb: 2 },
-            { name: 'Sextile', angle: 60, orb: 2 },
-          ];
+            const natalPlanets = chart.chart_data.planets;
+            const foundAspects: TransitAspect[] = [];
 
-          for (const tp of currentPositions) {
-            for (const np of natalPlanets) {
-              let angle = Math.abs(tp.longitude - np.longitude);
-              if (angle > 180) angle = 360 - angle;
+            const aspectTypes = [
+              { name: 'Conjunction', angle: 0, orb: 2 },
+              { name: 'Opposition', angle: 180, orb: 2 },
+              { name: 'Trine', angle: 120, orb: 2 },
+              { name: 'Square', angle: 90, orb: 2 },
+              { name: 'Sextile', angle: 60, orb: 2 },
+            ];
 
-              for (const aspect of aspectTypes) {
-                const orb = Math.abs(angle - aspect.angle);
-                if (orb <= aspect.orb) {
-                  foundAspects.push({
-                    transitingPlanet: tp.name,
-                    aspectName: aspect.name,
-                    natalPlanet: np.name,
-                    orb,
-                    interpretation: aspectDetails[aspect.name]?.interpretation || ''
-                  });
+            for (const tp of currentPositions) {
+              for (const np of natalPlanets) {
+                let angle = Math.abs(tp.longitude - np.longitude);
+                if (angle > 180) angle = 360 - angle;
+
+                for (const aspect of aspectTypes) {
+                  const orb = Math.abs(angle - aspect.angle);
+                  if (orb <= aspect.orb) {
+                    foundAspects.push({
+                      transitingPlanet: tp.name,
+                      aspectName: aspect.name,
+                      natalPlanet: np.name,
+                      orb,
+                      interpretation: aspectDetails[aspect.name]?.interpretation || ''
+                    });
+                  }
                 }
               }
             }
+            setTransits(foundAspects.sort((a, b) => a.orb - b.orb));
+          } finally {
+            swe.close();
           }
-          setTransits(foundAspects.sort((a, b) => a.orb - b.orb));
+        } catch (error) {
+          console.error('❌ Ошибка расчета транзитов:', error);
         } finally {
-          swe.close();
           setIsCalculating(false);
         }
       };
