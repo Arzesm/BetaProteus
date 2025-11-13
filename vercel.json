@@ -1,6 +1,4 @@
 {
-  "cleanUrls": false,
-  "trailingSlash": false,
   "headers": [
     {
       "source": "/swisseph.wasm",
@@ -8,10 +6,6 @@
         {
           "key": "Content-Type",
           "value": "application/wasm"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
@@ -21,18 +15,8 @@
         {
           "key": "Content-Type",
           "value": "application/octet-stream"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/((?!(?:swisseph\\.(?:wasm|data)|assets/|favicon\\.ico|placeholder\\.svg|robots\\.txt|.*\\.se1|.*\\.txt)).*)",
-      "destination": "/index.html"
     }
   ]
 }

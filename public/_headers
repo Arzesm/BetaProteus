@@ -1,0 +1,8 @@
+/swisseph.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=31536000, immutable
+
+/swisseph.data
+  Content-Type: application/octet-stream
+  Cache-Control: public, max-age=31536000, immutable
+
