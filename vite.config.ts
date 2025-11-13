@@ -21,5 +21,8 @@ export default defineConfig(() => ({
   assetsInclude: ['**/*.wasm', '**/*.data'],
   optimizeDeps: {
     exclude: ['swisseph-wasm']
+  },
+  build: {
+    chunkSizeWarningLimit: 2000
   }
 }));
