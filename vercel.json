@@ -1,28 +1,20 @@
 {
   "headers": [
     {
-      "source": "/swisseph.wasm",
+      "source": "/assets/(.*\\.wasm)",
       "headers": [
         {
           "key": "Content-Type",
           "value": "application/wasm"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
     {
-      "source": "/swisseph.data",
+      "source": "/assets/(.*\\.data)",
       "headers": [
         {
           "key": "Content-Type",
           "value": "application/octet-stream"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     },
@@ -44,8 +36,5 @@
         }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/((?!swisseph\\.).+)", "destination": "/index.html" }
   ]
 }
