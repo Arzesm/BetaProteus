@@ -9,14 +9,18 @@ import { City } from '@/data/cities';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 (globalThis as any).Module.locateFile = (path: string, prefix: string) => {
+  console.log('🔧 locateFile called:', path, prefix);
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   // Always return paths from /public directory (no hashing)
   if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) {
+    console.log('✅ Returning /swisseph.wasm');
     return '/swisseph.wasm';
   }
   if (path.endsWith('.data') || path.includes('swisseph.data')) {
+    console.log('✅ Returning /swisseph.data');
     return '/swisseph.data';
   }
+  console.log('⚠️ Returning default:', `${prefix}${path}`);
   return `${prefix}${path}`;
 };
 
