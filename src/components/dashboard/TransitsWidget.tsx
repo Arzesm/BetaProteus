@@ -7,8 +7,6 @@ import { Zap, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-// CRITICAL: Import swissephConfig FIRST
-import '@/lib/swissephConfig';
 import SwissEph from 'swisseph-wasm';
 import { NatalChartData } from "@/services/astrologyService";
 

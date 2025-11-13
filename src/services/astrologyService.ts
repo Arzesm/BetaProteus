@@ -1,5 +1,3 @@
-// CRITICAL: Import swissephConfig FIRST to set up Module.locateFile globally
-import '@/lib/swissephConfig';
 import type { BirthData } from '@/components/astrology/BirthDataForm';
 import { City } from '@/data/cities';
 import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';

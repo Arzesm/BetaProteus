@@ -1,5 +1,3 @@
-// CRITICAL: Import swissephConfig FIRST to set up Module.locateFile
-import '../lib/swissephConfig';
 import SwissEph from 'swisseph-wasm';
 
 // Знаки зодиака
