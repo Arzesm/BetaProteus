@@ -1,46 +1,46 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/swisseph\\.wasm",
-      "headers": {
-        "Content-Type": "application/wasm",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "dest": "/swisseph.wasm"
+      "source": "/((?!assets|swisseph\\.wasm|swisseph\\.data|favicon\\.ico|placeholder\\.svg|robots\\.txt|.*\\.se1|.*\\.txt).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/swisseph.wasm",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/wasm"
+        }
+      ]
     },
     {
-      "src": "/swisseph\\.data",
-      "headers": {
-        "Content-Type": "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "dest": "/swisseph.data"
+      "source": "/swisseph.data",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/octet-stream"
+        }
+      ]
     },
     {
-      "src": "/assets/swisseph(.*)\\.wasm",
-      "headers": {
-        "Content-Type": "application/wasm",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
+      "source": "/assets/(.*)\\.wasm",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/wasm"
+        }
+      ]
     },
     {
-      "src": "/assets/swisseph(.*)\\.data",
-      "headers": {
-        "Content-Type": "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/assets/(.*)",
-      "continue": true
-    },
-    {
-      "src": "/(favicon\\.ico|placeholder\\.svg|robots\\.txt|.*\\.se1|.*\\.txt)",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/assets/(.*)\\.data",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/octet-stream"
+        }
+      ]
     }
   ]
 }
