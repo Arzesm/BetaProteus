@@ -34,10 +34,23 @@ if (typeof window !== 'undefined') {
 // Глобальный экземпляр SwissEph
 let swe: SwissEph | null = null;
 let initialized = false;
+let initPromise: Promise<SwissEph | null> | null = null;
 
-// Инициализация SwissEph
+// Инициализация SwissEph (с защитой от параллельных вызовов)
 async function initSwissEph() {
-  if (!initialized) {
+  // Если уже инициализирован, возвращаем экземпляр
+  if (initialized && swe) {
+    return swe;
+  }
+  
+  // Если инициализация в процессе, ждём её завершения
+  if (initPromise) {
+    console.log('⏳ Инициализация уже в процессе, ждём...');
+    return initPromise;
+  }
+  
+  // Начинаем новую инициализацию
+  initPromise = (async () => {
     try {
       console.log('Инициализация SwissEph...');
       
@@ -76,14 +89,17 @@ async function initSwissEph() {
         console.warn('🚀 ПРОДАКШЕН: SwissEph не инициализирован, используем fallback расчеты');
         initialized = false;
         swe = null;
+        initPromise = null;
         return null;
       } else {
         // На локальном сервере выбрасываем ошибку, чтобы понять проблему
+        initPromise = null;
         throw error;
       }
     }
-  }
-  return swe;
+  })();
+  
+  return initPromise;
 }
 
 // Функция для расчета знака зодиака
