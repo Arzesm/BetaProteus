@@ -1,14 +1,14 @@
 {
   "routes": [
     {
-      "src": "/assets/(.*)\\.wasm",
+      "src": "/swisseph\\.wasm",
       "headers": { "Content-Type": "application/wasm" },
-      "dest": "/assets/$1.wasm"
+      "continue": true
     },
     {
-      "src": "/assets/(.*)\\.data",
+      "src": "/swisseph\\.data",
       "headers": { "Content-Type": "application/octet-stream" },
-      "dest": "/assets/$1.data"
+      "continue": true
     },
     {
       "handle": "filesystem"

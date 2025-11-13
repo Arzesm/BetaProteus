@@ -2,10 +2,6 @@ import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
 import type { BirthData } from '@/components/astrology/BirthDataForm';
 import { City } from '@/data/cities';
 
-// Import WASM and data files with ?url to get the correct path in production
-import wasmUrl from '/swisseph.wasm?url';
-import dataUrl from '/swisseph.data?url';
-
 // Ensure Emscripten loader can resolve WASM/data files from public/ in dev/prod (Vercel)
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -13,15 +9,13 @@ import dataUrl from '/swisseph.data?url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 (globalThis as any).Module.locateFile = (path: string, prefix: string) => {
-  console.log('🔍 Module.locateFile:', { path, prefix, wasmUrl, dataUrl });
   if (path.startsWith('http') || path.startsWith('data:')) return path;
+  // Always return paths from /public directory (no hashing)
   if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) {
-    console.log('✅ Returning wasmUrl:', wasmUrl);
-    return wasmUrl;
+    return '/swisseph.wasm';
   }
   if (path.endsWith('.data') || path.includes('swisseph.data')) {
-    console.log('✅ Returning dataUrl:', dataUrl);
-    return dataUrl;
+    return '/swisseph.data';
   }
   return `${prefix}${path}`;
 };
