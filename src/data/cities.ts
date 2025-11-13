@@ -169,5 +169,6 @@ export const cities: City[] = [
   { name: "Балахна", country: "Россия", latitude: 56.4833, longitude: 43.5833, timezone: 3 },
   { name: "Выкса", country: "Россия", latitude: 55.3167, longitude: 42.1667, timezone: 3 },
   { name: "Бор", country: "Россия", latitude: 56.3500, longitude: 44.0667, timezone: 3 },
+  { name: "Большое Болдино", country: "Россия", latitude: 55.0062, longitude: 45.3149, timezone: 3 },
   { name: "Кстово", country: "Россия", latitude: 56.1500, longitude: 44.2000, timezone: 3 },
 ];
