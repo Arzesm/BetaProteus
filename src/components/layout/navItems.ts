@@ -1,4 +1,4 @@
-import { Home, User, Star, Moon, Brain, Book, Sparkles, MessageSquare } from "lucide-react";
+import { Home, Star, Moon, Brain, Book, Sparkles, MessageSquare } from "lucide-react";
 
 export type NavItem = {
   to: string;
@@ -8,7 +8,6 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { to: "/", label: "Главный экран", icon: Home },
-  { to: "/personality", label: "Анализ личности", icon: User },
   { to: "/astrology", label: "Астрология", icon: Star },
   { to: "/dreams", label: "Сны", icon: Moon },
   { to: "/psychology", label: "Психология", icon: Brain },

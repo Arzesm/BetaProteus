@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import { Layout } from "@/components/layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Astrology from "@/pages/Astrology";
-import PersonalityAnalysis from "@/pages/PersonalityAnalysis";
 import Dreams from "@/pages/Dreams";
 import Journal from "@/pages/Journal";
 import Meditation from "@/pages/Meditation";
@@ -21,7 +20,6 @@ function AppRoutes() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="astrology" element={<Astrology />} />
-          <Route path="personality" element={<PersonalityAnalysis />} />
           <Route path="dreams" element={<Dreams />} />
           <Route path="journal" element={<Journal />} />
           <Route path="meditation" element={<Meditation />} />
