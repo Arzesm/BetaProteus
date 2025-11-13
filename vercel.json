@@ -1,14 +1,14 @@
 {
   "routes": [
     {
-      "src": "/assets/.*\\.wasm$",
+      "src": "/assets/(.*)\\.wasm",
       "headers": { "Content-Type": "application/wasm" },
-      "continue": true
+      "dest": "/assets/$1.wasm"
     },
     {
-      "src": "/assets/.*\\.data$",
+      "src": "/assets/(.*)\\.data",
       "headers": { "Content-Type": "application/octet-stream" },
-      "continue": true
+      "dest": "/assets/$1.data"
     },
     {
       "handle": "filesystem"

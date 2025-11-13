@@ -13,9 +13,16 @@ import dataUrl from '/swisseph.data?url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 (globalThis as any).Module.locateFile = (path: string, prefix: string) => {
+  console.log('🔍 Module.locateFile:', { path, prefix, wasmUrl, dataUrl });
   if (path.startsWith('http') || path.startsWith('data:')) return path;
-  if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) return wasmUrl;
-  if (path.endsWith('.data') || path.includes('swisseph.data')) return dataUrl;
+  if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) {
+    console.log('✅ Returning wasmUrl:', wasmUrl);
+    return wasmUrl;
+  }
+  if (path.endsWith('.data') || path.includes('swisseph.data')) {
+    console.log('✅ Returning dataUrl:', dataUrl);
+    return dataUrl;
+  }
   return `${prefix}${path}`;
 };
 
