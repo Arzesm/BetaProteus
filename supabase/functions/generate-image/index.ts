@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { decode } from "https://deno.land/std@0.190.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,10 +46,18 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "dall-e-3",
-        prompt: `A vivid, artistic, dreamlike image representing the following dream: ${prompt}`,
+        prompt: `Create a highly realistic, photorealistic image representing the following dream scene. The image should be clear, sharp, and expressive with detailed textures and lighting. IMPORTANT: Do NOT include any text, words, letters, or writing in the image. Focus on visual storytelling through realistic imagery only.
+
+Dream description: ${prompt}
+
+Style requirements:
+- Photorealistic, detailed rendering
+- Clear and sharp focus
+- Expressive and emotionally engaging
+- Rich colors and proper lighting
+- No text or letters anywhere in the image`,
         n: 1,
-        size: "512x512",
-        response_format: "b64_json",
+        size: "1024x1024",
       }),
     });
 
@@ -61,11 +68,20 @@ serve(async (req) => {
       throw new Error(data.error?.message || 'Ошибка при генерации изображения в OpenAI.');
     }
 
-    const b64_json = data.data[0].b64_json;
+    // Get the image URL from OpenAI response
+    const imageUrl = data.data[0].url;
 
-    // 2. Upload image to Supabase Storage
+    // 2. Download the image from OpenAI
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error('Ошибка при загрузке изображения из OpenAI.');
+    }
+    
+    const imageBlob = await imageResponse.blob();
+    const imageBuffer = new Uint8Array(await imageBlob.arrayBuffer());
+
+    // 3. Upload image to Supabase Storage
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const imageBuffer = decode(b64_json);
     const fileName = `${crypto.randomUUID()}.png`;
     const bucketName = 'dream_images';
 
@@ -82,14 +98,14 @@ serve(async (req) => {
       throw new Error(uploadError.message || 'Ошибка при загрузке изображения в хранилище.');
     }
 
-    // 3. Get public URL for the uploaded image
+    // 4. Get public URL for the uploaded image
     const { data: publicUrlData } = supabaseAdmin.storage
       .from(bucketName)
       .getPublicUrl(fileName);
 
-    const imageUrl = publicUrlData.publicUrl;
+    const finalImageUrl = publicUrlData.publicUrl;
 
-    return new Response(JSON.stringify({ image: imageUrl }), {
+    return new Response(JSON.stringify({ image: finalImageUrl }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
