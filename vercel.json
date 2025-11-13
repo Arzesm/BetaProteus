@@ -1,46 +1,21 @@
 {
-  "headers": [
+  "routes": [
     {
-      "source": "/assets/(.*\\.wasm)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/wasm"
-        }
-      ]
+      "src": "/assets/.*\\.wasm$",
+      "headers": { "Content-Type": "application/wasm" },
+      "continue": true
     },
     {
-      "source": "/assets/(.*\\.data)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/octet-stream"
-        }
-      ]
+      "src": "/assets/.*\\.data$",
+      "headers": { "Content-Type": "application/octet-stream" },
+      "continue": true
     },
     {
-      "source": "/(.*\\.wasm)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/wasm"
-        }
-      ]
+      "handle": "filesystem"
     },
     {
-      "source": "/(.*\\.data)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/octet-stream"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
