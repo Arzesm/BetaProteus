@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>dyad-generated-app</title>
+    <!-- CRITICAL: Configure SwissEph WASM paths BEFORE any module loading -->
+    <script>
+      console.log('🚀 [index.html] Setting up global Module.locateFile');
+      window.Module = window.Module || {};
+      window.Module.locateFile = function(path, prefix) {
+        console.log('🔧 [index.html] locateFile:', path, 'prefix:', prefix);
+        
+        // Redirect all WASM/DATA to root
+        if (path.includes('swisseph.wasm') || path.endsWith('.wasm')) {
+          console.log('✅ [index.html] → /swisseph.wasm');
+          return '/swisseph.wasm';
+        }
+        if (path.includes('swisseph.data') || path.endsWith('.data')) {
+          console.log('✅ [index.html] → /swisseph.data');
+          return '/swisseph.data';
+        }
+        
+        if (path.startsWith('http') || path.startsWith('data:')) {
+          return path;
+        }
+        
+        return prefix + path;
+      };
+      console.log('✅ [index.html] Module.locateFile configured');
+    </script>
   </head>
 
   <body>
