@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import SwissEph from 'swisseph-wasm';
+// Use our patched version that passes window.Module config
+import SwissEph from '../../../swisseph-wasm-main/src/swisseph.js';
 import { NatalChartData } from "@/services/astrologyService";
 import { toast } from "sonner";
 import { format } from "date-fns";

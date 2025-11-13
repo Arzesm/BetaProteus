@@ -1,4 +1,5 @@
-import SwissEph from 'swisseph-wasm';
+// Use our patched version that passes window.Module config
+import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
 
 // Знаки зодиака
 const zodiacSigns = [

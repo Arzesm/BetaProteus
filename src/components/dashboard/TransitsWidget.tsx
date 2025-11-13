@@ -7,7 +7,8 @@ import { Zap, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import SwissEph from 'swisseph-wasm';
+// Use our patched version that passes window.Module config
+import SwissEph from '../../../swisseph-wasm-main/src/swisseph.js';
 import { NatalChartData } from "@/services/astrologyService";
 
 interface SavedChart {
