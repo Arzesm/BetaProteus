@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+// CRITICAL: Import swissephConfig FIRST
+import '@/lib/swissephConfig';
 import SwissEph from 'swisseph-wasm';
 import { NatalChartData } from "@/services/astrologyService";
 import { toast } from "sonner";

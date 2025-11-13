@@ -1,41 +1,7 @@
+// CRITICAL: Import swissephConfig FIRST to set up Module.locateFile globally
+import '@/lib/swissephConfig';
 import type { BirthData } from '@/components/astrology/BirthDataForm';
 import { City } from '@/data/cities';
-
-// CRITICAL: Set Module.locateFile BEFORE importing SwissEph to ensure it's used during WASM initialization
-console.log('🚀 Setting up Module.locateFile BEFORE SwissEph import');
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  window.Module = window.Module || {};
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  window.Module.locateFile = (path: string, prefix: string) => {
-    console.log('🔧 locateFile called:', path, 'prefix:', prefix);
-    
-    // Handle both absolute and relative paths for WASM files
-    if (path.includes('swisseph.wasm') || (typeof path === 'string' && path.endsWith('.wasm'))) {
-      console.log('✅ Returning /swisseph.wasm (from root)');
-      return '/swisseph.wasm';
-    }
-    if (path.includes('swisseph.data') || (typeof path === 'string' && path.endsWith('.data'))) {
-      console.log('✅ Returning /swisseph.data (from root)');
-      return '/swisseph.data';
-    }
-    
-    // Fallback for other files
-    if (path.startsWith('http') || path.startsWith('data:')) {
-      console.log('↪️ Returning absolute path unchanged:', path);
-      return path;
-    }
-    
-    const result = `${prefix}${path}`;
-    console.log('⚠️ Returning default:', result);
-    return result;
-  };
-}
-
 import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
 
 const ZODIAC_SIGNS = [

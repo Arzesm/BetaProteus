@@ -1,19 +1,6 @@
+// CRITICAL: Import swissephConfig FIRST to set up Module.locateFile
+import '../lib/swissephConfig';
 import SwissEph from 'swisseph-wasm';
-
-// Ensure Vite can resolve WASM and data files paths when bundling
-// @ts-ignore - hint to Emscripten loader used by swisseph-wasm
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//@ts-ignore
-(globalThis as any).Module = (globalThis as any).Module || {};
-// @ts-ignore
-(globalThis as any).Module.locateFile = (path: string, prefix: string) => {
-  // Vite serves assets from root; allow resolving .wasm and .data under the built assets
-  // If path already absolute, return as is
-  if (path.startsWith('http') || path.startsWith('/') || path.startsWith('data:')) return path;
-  // Delegate to default behavior for non-wasm files
-  if (!path.endsWith('.wasm') && !path.endsWith('.data')) return `${prefix}${path}`;
-  return `/${path}`;
-};
 
 // Знаки зодиака
 const zodiacSigns = [
