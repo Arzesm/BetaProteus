@@ -26,7 +26,10 @@ class SwissEph {
   }
   
   async initSwissEph() {
-    this.SweModule = await WasamSwissEph();
+    // Pass window.Module to Emscripten so our locateFile is used
+    const moduleConfig = typeof window !== 'undefined' && window.Module ? window.Module : {};
+    console.log('📦 Passing Module config to WasamSwissEph:', moduleConfig);
+    this.SweModule = await WasamSwissEph(moduleConfig);
     
     const config = createConfigModule(this.SweModule);
     const eclipses = createEclipsesModule(this.SweModule);
