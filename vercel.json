@@ -1,7 +1,8 @@
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/swisseph.wasm", "destination": "/swisseph.wasm" },
+    { "source": "/swisseph.data", "destination": "/swisseph.data" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
