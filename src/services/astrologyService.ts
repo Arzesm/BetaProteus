@@ -1,28 +1,38 @@
-import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
 import type { BirthData } from '@/components/astrology/BirthDataForm';
 import { City } from '@/data/cities';
 
-// Ensure Emscripten loader can resolve WASM/data files from public/ in dev/prod (Vercel)
+// CRITICAL: Set Module.locateFile BEFORE importing SwissEph to ensure it's used during WASM initialization
+console.log('🚀 Setting up Module.locateFile BEFORE SwissEph import');
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-(globalThis as any).Module = (globalThis as any).Module || {};
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-(globalThis as any).Module.locateFile = (path: string, prefix: string) => {
-  console.log('🔧 locateFile called:', path, prefix);
-  if (path.startsWith('http') || path.startsWith('data:')) return path;
-  // Always return paths from /public directory (no hashing)
-  if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) {
-    console.log('✅ Returning /swisseph.wasm');
-    return '/swisseph.wasm';
-  }
-  if (path.endsWith('.data') || path.includes('swisseph.data')) {
-    console.log('✅ Returning /swisseph.data');
-    return '/swisseph.data';
-  }
-  console.log('⚠️ Returning default:', `${prefix}${path}`);
-  return `${prefix}${path}`;
-};
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  window.Module = window.Module || {};
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  window.Module.locateFile = (path: string, prefix: string) => {
+    console.log('🔧 locateFile called:', path, 'prefix:', prefix);
+    if (path.startsWith('http') || path.startsWith('data:')) {
+      console.log('↪️ Already absolute:', path);
+      return path;
+    }
+    // Always return paths from /public directory (no hashing)
+    if (path.endsWith('.wasm') || path.includes('swisseph.wasm')) {
+      console.log('✅ Returning /swisseph.wasm');
+      return '/swisseph.wasm';
+    }
+    if (path.endsWith('.data') || path.includes('swisseph.data')) {
+      console.log('✅ Returning /swisseph.data');
+      return '/swisseph.data';
+    }
+    const result = `${prefix}${path}`;
+    console.log('⚠️ Returning default:', result);
+    return result;
+  };
+}
+
+import SwissEph from '../../swisseph-wasm-main/src/swisseph.js';
 
 const ZODIAC_SIGNS = [
   'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева',
