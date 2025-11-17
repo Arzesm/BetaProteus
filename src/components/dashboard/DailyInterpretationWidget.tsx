@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NatalChartData } from "@/services/astrologyService";
 import { toast } from "sonner";
@@ -28,7 +27,6 @@ const CACHE_VERSION = 2;
 export function DailyInterpretationWidget({ chart }: DailyInterpretationWidgetProps) {
   const [interpretation, setInterpretation] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (!chart) {
@@ -88,44 +86,6 @@ export function DailyInterpretationWidget({ chart }: DailyInterpretationWidgetPr
     getInterpretation();
   }, [chart]);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    const cacheKey = `dailyInterpretation_${chart.id}`;
-    localStorage.removeItem(cacheKey);
-    
-    // Пересоздаем прогноз
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    
-    try {
-      const transits: TransitAspect[] = await calculateTransitsForNow(chart.chart_data);
-
-      let newInterpretation: string;
-      if (transits.length === 0) {
-        newInterpretation =
-          "Сегодня нет ярко выраженных астрологических влияний на вашу натальную карту. Это спокойный день, который можно посвятить привычным делам, восстановлению сил и мягкому саморазвитию.";
-      } else {
-        const { data, error } = await supabase.functions.invoke("get-daily-transit-interpretation", {
-          body: { natalChart: chart.chart_data, transits: transits.slice(0, 5) },
-        });
-
-        if (error) throw error;
-        newInterpretation = data.interpretation;
-      }
-      
-      setInterpretation(newInterpretation);
-      localStorage.setItem(
-        cacheKey,
-        JSON.stringify({ date: todayStr, interpretation: newInterpretation, version: CACHE_VERSION })
-      );
-      toast.success("Прогноз обновлен!");
-    } catch (error: any) {
-      console.error("Error refreshing interpretation:", error);
-      toast.error("Не удалось обновить прогноз", { description: error.message });
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <Card>
@@ -145,26 +105,13 @@ export function DailyInterpretationWidget({ chart }: DailyInterpretationWidgetPr
   return (
     <Card className="bg-gradient-to-br from-primary/10 to-background">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center text-xl">
-              <Sparkles className="mr-3 h-6 w-6 text-primary" />
-              Ваш прогноз на сегодня
-            </CardTitle>
-            <CardDescription>
-              На основе влияния планет на вашу натальную карту
-            </CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="shrink-0"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+        <CardTitle className="flex items-center text-xl">
+          <Sparkles className="mr-3 h-6 w-6 text-primary" />
+          Ваш прогноз на сегодня
+        </CardTitle>
+        <CardDescription>
+          На основе влияния планет на вашу натальную карту
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {interpretation && (
