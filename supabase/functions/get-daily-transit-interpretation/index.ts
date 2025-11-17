@@ -3,7 +3,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
@@ -38,17 +39,31 @@ serve(async (req) => {
       `Транзитная планета ${t.transitingPlanet} делает аспект ${t.aspectName} к натальной планете ${t.natalPlanet}`
     ).join('.\n');
 
-    const systemPrompt = `Ты — Протей, мудрый и добрый астролог. Твоя задача — написать короткий (2-3 абзаца) и вдохновляющий прогноз на день для человека, основываясь на текущих транзитах к его натальной карте.
+    const systemPrompt = `Ты — Протей, мудрый и добрый астролог. Твоя задача — дать человеку ясный, практичный прогноз на день простым и понятным русским языком.
 
-**Правила:**
-1.  **Обращайся на "вы"**: "Сегодня вам стоит...", "Ваша энергия будет направлена на...".
-2.  **Никакого жаргона**: Не используй слова "транзит", "аспект", "натальный", "Солнце", "Марс", "квадрат", "трин" и т.д.
-3.  **Переводи на язык психологии и событий**: Вместо "Транзитный Марс в квадрате к натальному Сатурну" напиши "Сегодня вы можете столкнуться с препятствиями в достижении целей, которые потребуют терпения и дисциплины. Возможны конфликты с авторитетами или ощущение ограничений."
-4.  **Структура**:
-    - **Общая атмосфера дня**: Какое настроение будет преобладать?
-    - **Ключевые темы**: На какие сферы жизни (работа, отношения, саморазвитие) стоит обратить внимание?
-    - **Практический совет**: Дай один конкретный, полезный совет на день.
-5.  **Будь позитивным, но реалистичным**: Укажи на возможности, а вызовы представь как точки роста.
+**КРИТИЧЕСКИ ВАЖНО:**
+- ЖЁСТКО ОГРАНИЧИ ОБЪЁМ: 100–150 слов. НЕ БОЛЬШЕ 150 СЛОВ.
+- Пиши живым, разговорным, но уважительным стилем.
+- Текст должен быть цельным и логично завершённым, без обрыва мыслей.
+
+**ФИКСИРОВАННАЯ СТРУКТУРА ОТВЕТА (ИСПОЛЬЗУЙ РОВНО ЭТУ РАЗМЕТКУ):**
+**Атмосфера дня**
+- 1–2 коротких предложения о общем настроении и энергиях дня.
+
+**Что делать сегодня**
+- 2–3 конкретных действия в формате глаголов: что СТОИТ сделать, на чём сосредоточиться.
+
+**Чего не делать сегодня**
+- 2–3 конкретных запрета/ограничения: чего лучше избегать, где не торопиться, чего не обострять.
+
+**Совет дня**
+- 1–2 предложения с простым, практическим советом, как прожить этот день мягче и полезнее.
+
+**ПРАВИЛА:**
+- Обращайся на "вы".
+- НЕ используй астрологический жаргон и технические термины (транзит, аспект, квадратура, натальный и т.п.).
+- Объясняй всё через психологию, ощущения и реальные жизненные ситуации.
+- Обязательно укажи, если есть потенциально напряжённые моменты, и мягко объясни, как с ними справиться.
 
 Вот данные для анализа:`;
     
@@ -62,11 +77,13 @@ ${transitsSummary}
 Напиши прогноз на день для этого человека.`;
 
     const requestBody = {
-      model: "gpt-4o",
+      model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+      max_tokens: 260,
+      temperature: 0.7,
     };
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -89,7 +106,47 @@ ${transitsSummary}
       });
     }
 
-    const interpretation = data.choices[0].message.content;
+    let interpretation = data.choices[0].message.content;
+
+    // Мягкий серверный контроль объёма: если сильно вышли за пределы, просим модель переписать
+    const countWords = (s: string) =>
+      (s || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+
+    const wc = countWords(interpretation);
+
+    if (wc > 150) {
+      const strictSystem = `${systemPrompt}
+
+ВНИМАНИЕ: предыдущий ответ был слишком длинным (${wc} слов). Перепиши прогноз так, чтобы он содержал 100–150 слов, не больше 150, сохранив ту же структуру заголовков и буллитов. НЕ обрывай фразы — текст должен оставаться цельным и завершённым.`;
+
+      const retryBody = {
+        model: "gpt-5",
+        messages: [
+          { role: "system", content: strictSystem },
+          { role: "user", content: userPrompt },
+        ],
+        max_tokens: 260,
+        temperature: 0.7,
+      };
+
+      const retryResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify(retryBody),
+      });
+
+      const retryData = await retryResponse.json();
+      if (retryResponse.ok && retryData.choices && retryData.choices.length > 0) {
+        interpretation = retryData.choices[0].message.content;
+      }
+    }
+        
     return new Response(JSON.stringify({ interpretation }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

@@ -99,3 +99,6 @@ export function generateMbtiLongDescription(typeCode: string, title?: string): s
 
 
 
+
+
+

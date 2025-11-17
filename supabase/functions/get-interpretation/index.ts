@@ -36,7 +36,7 @@ serve(async (req) => {
 ФОРМАТ ОТВЕТА: один сплошной абзац с использованием **жирного шрифта** для ключевых слов и важных образов.
 
 ОБЯЗАТЕЛЬНО:
-- Объем: 150–200 слов (не более 200 слов)
+- Объем: до 250 слов (НЕ БОЛЬШЕ 250 слов)
 - Подробно, но емко: без воды, только существенные смыслы
 - Выделяй **жирным** ключевые слова, важные образы и психологические термины
 - Объясняй значение образов и символов и связывай их с реальной жизнью и эмоциональным состоянием
@@ -44,7 +44,7 @@ serve(async (req) => {
 
 ПРИМЕР СТИЛЯ (фрагмент): «Этот сон отражает ваше **внутреннее стремление к свободе**. **Полет** символизирует желание подняться над рутиной, а **город внизу** — повседневные ограничения. Вы обладаете **внутренними ресурсами** и готовы к переменам…»`;
     
-    const userPrompt = `Растолкуй этот сон глубоко и емко. Формат: один сплошной абзац, 150–200 слов (не более 200). Используй **жирный шрифт** для выделения ключевых слов и важных моментов. Текст сна: ${dreamText}`;
+    const userPrompt = `Растолкуй этот сон глубоко и емко. Формат: один сплошной абзац, до 250 слов (не более 250). Используй **жирный шрифт** для выделения ключевых слов и важных моментов. Текст сна: ${dreamText}`;
 
     const requestBody = {
       model: OPENAI_MODEL,
@@ -52,7 +52,7 @@ serve(async (req) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 230,
+      max_tokens: 400,
     };
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -77,18 +77,20 @@ serve(async (req) => {
 
     let interpretation = data.choices[0].message.content;
 
-    // Server-side guardrail: ensure 150–200 words without client-side trimming
+    // Server-side guardrail: не больше 250 слов, без жесткого обрезания текста
     const countWords = (s: string) => (s || '').trim().split(/\s+/).filter(Boolean).length;
     const wc = countWords(interpretation);
-    if (wc < 150 || wc > 200) {
-      const strictSystem = `${systemPrompt}\n\nВНИМАНИЕ: Дай ответ объёмом 150–200 слов. Никогда не превышай 200 слов. Остановись сразу при достижении 200 слов.`;
+    if (wc > 250) {
+      const strictSystem = `${systemPrompt}
+
+ВНИМАНИЕ: Дай ответ объёмом НЕ БОЛЕЕ 250 слов. Не превышай 250 слов и не обрывай мысль механически — ответ должен быть цельным, законченным абзацем.`;
       const retryBody = {
         model: OPENAI_MODEL,
         messages: [
           { role: "system", content: strictSystem },
           { role: "user", content: userPrompt },
         ],
-        max_tokens: 230,
+        max_tokens: 400,
       };
       const retry = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',

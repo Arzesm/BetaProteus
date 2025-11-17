@@ -217,7 +217,7 @@ ${aspects.map((a: { planet1: string; planet2: string; aspectName: string; orb: n
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o-2024-11-20',
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: `Проанализируй эту натальную карту:\n\n${chartDescription}` }

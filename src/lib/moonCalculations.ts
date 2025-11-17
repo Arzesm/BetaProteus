@@ -1,4 +1,6 @@
-// Упрощенный расчет луны с использованием suncalc
+// Упрощенный и точный расчет луны:
+// - приоритет: SwissEph (через swisseph-wasm-main) для Москвы
+// - fallback: SunCalc / упрощенные формулы, если SwissEph недоступен
 import * as SunCalc from 'suncalc';
 
 // Знаки зодиака
@@ -11,12 +13,28 @@ const zodiacSigns = [
 const MOSCOW_COORDS = {
   latitude: 55.7558,
   longitude: 37.6176,
-  timezone: 3
+  timezone: 3, // UTC+3
 };
 
 // Кэш для данных о луне
 const moonDataCache = new Map<string, { data: MoonData; timestamp: number }>();
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 часа
+
+// Lazy‑загрузка SwissEph из swisseph-wasm-main (адаптированный локальный билд)
+let SwissEph: any = null;
+let swissEphPromise: Promise<any> | null = null;
+
+async function getSwissEph() {
+  if (SwissEph) return SwissEph;
+  if (swissEphPromise) return swissEphPromise;
+
+  swissEphPromise = import('../../swisseph-wasm-main/src/swisseph.js').then((module) => {
+    SwissEph = module.default;
+    return SwissEph;
+  });
+
+  return swissEphPromise;
+}
 
 // Функция для расчета знака зодиака по долготе
 function calculateZodiacSign(longitude: number): string {
@@ -72,93 +90,75 @@ export interface MoonData {
 
 // Основная функция расчета с использованием SunCalc
 export async function getMoonData(date: string, time?: string): Promise<MoonData> {
-  try {
-    // Проверяем кэш
-    const cached = moonDataCache.get(date);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      console.log('📦 Используем кэшированные данные для:', date);
-      return cached.data;
-    }
+  // Проверяем кэш
+  const cached = moonDataCache.get(date);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log('📦 Используем кэшированные данные для:', date);
+    return cached.data;
+  }
 
-    // Создаем объект даты
+  try {
+    // 1. Пытаемся получить точные данные через SwissEph
+    const swissData = await calculateMoonPhaseWithSwissEph(date, time);
+    moonDataCache.set(date, { data: swissData, timestamp: Date.now() });
+    console.log('✅ Расчет луны с SwissEph:', swissData);
+    return swissData;
+  } catch (error) {
+    console.error('❌ Ошибка SwissEph, используем SunCalc/fallback:', error);
+  }
+
+  try {
+    // 2. Fallback на SunCalc (как и раньше)
     const dateObj = new Date(date);
-    
-    // SunCalc: получаем illumination (освещенность луны)
+
     const moonIllum = SunCalc.getMoonIllumination(dateObj);
     const illumination = Math.round(moonIllum.fraction * 100);
-    
-    // SunCalc: получаем позицию луны (азимут и высоту не используем, только для расчета знака)
-    const moonPos = SunCalc.getMoonPosition(dateObj, MOSCOW_COORDS.latitude, MOSCOW_COORDS.longitude);
-    
-    // Вычисляем элонгацию для определения фазы
-    // SunCalc предоставляет phase: 0 = новолуние, 0.25 = первая четверть, 0.5 = полнолуние, 0.75 = последняя четверть
+
     const phase = moonIllum.phase;
-    
-    // Определяем название фазы
+
     let phaseName: string;
-    let phaseEmoji: string;
-    
     if (phase < 0.03 || phase > 0.97) {
       phaseName = "Новолуние";
-      phaseEmoji = "🌑";
     } else if (phase < 0.22) {
       phaseName = "Растущий серп";
-      phaseEmoji = "🌒";
     } else if (phase < 0.28) {
       phaseName = "Первая четверть";
-      phaseEmoji = "🌓";
     } else if (phase < 0.47) {
       phaseName = "Растущая луна";
-      phaseEmoji = "🌔";
     } else if (phase < 0.53) {
       phaseName = "Полнолуние";
-      phaseEmoji = "🌕";
     } else if (phase < 0.72) {
       phaseName = "Убывающая луна";
-      phaseEmoji = "🌖";
     } else if (phase < 0.78) {
       phaseName = "Последняя четверть";
-      phaseEmoji = "🌗";
     } else {
       phaseName = "Убывающий серп";
-      phaseEmoji = "🌘";
     }
-    
-    // Для знака зодиака используем упрощенный расчет на основе даты
-    // (SunCalc не предоставляет эклиптическую долготу)
-    const year = dateObj.getFullYear();
-    const dayOfYear = Math.floor((dateObj.getTime() - new Date(year, 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Луна проходит зодиак за ~27.3 дней
+
+    // Упрощённый знак через цикл
     const lunarCycle = 27.32166;
     const knownNewMoon = new Date("2000-01-06T18:14:00Z");
     const daysSinceKnown = (dateObj.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
     const cyclePosition = (daysSinceKnown % lunarCycle) / lunarCycle;
-    
-    // Определяем знак (0-360 градусов / 12 знаков = 30 градусов на знак)
     const approximateLongitude = cyclePosition * 360;
     const sign = calculateZodiacSign(approximateLongitude);
-    const signEmoji = getSignEmoji(sign);
-    
-    const result = {
+
+    const result: MoonData = {
       phase: phaseName,
-      phaseEmoji,
+      phaseEmoji: getPhaseEmoji(phaseName),
       sign,
-      signEmoji,
-      illumination
+      signEmoji: getSignEmoji(sign),
+      illumination,
     };
-    
-    // Сохраняем в кэш
+
     moonDataCache.set(date, { data: result, timestamp: Date.now() });
-    console.log('✅ Расчет луны с SunCalc:', result);
-    
+    console.log('✅ Расчет луны с SunCalc (fallback):', result);
     return result;
-    
   } catch (error) {
-    console.error('❌ Ошибка расчета луны:', error);
-    
-    // Fallback на простой расчет
-    return calculateMoonPhaseFallback(date);
+    console.error('❌ Ошибка расчета луны (SunCalc), используем простой fallback:', error);
+    const fallback = calculateMoonPhaseFallback(date);
+    moonDataCache.set(date, { data: fallback, timestamp: Date.now() });
+    return fallback;
   }
 }
 
@@ -219,6 +219,91 @@ function calculateMoonPhaseFallback(date: string): MoonData {
 // Функции для совместимости с существующим кодом
 export function calculateMoonPhase(date: string): MoonData {
   return calculateMoonPhaseFallback(date);
+}
+
+// Конвертация московского времени в UTC для SwissEph
+function convertToUTC(date: string, time?: string): { year: number; month: number; day: number; hour: number } {
+  const [y, m, d] = date.split('-').map((v) => parseInt(v, 10));
+  const [hh, mm] = (time ?? '12:00').split(':').map((v) => parseInt(v, 10));
+
+  let year = y;
+  let month = m;
+  let day = d;
+  let hourLocal = isNaN(hh) ? 12 : hh;
+  const minute = isNaN(mm) ? 0 : mm;
+
+  // Переводим московское время (UTC+3) в UTC
+  let hourUTC = hourLocal - MOSCOW_COORDS.timezone;
+
+  // Обрабатываем переход через полночь
+  const baseDate = new Date(Date.UTC(year, month - 1, day, hourLocal, minute));
+  if (hourUTC < 0 || hourUTC >= 24) {
+    const utcDate = new Date(baseDate.getTime() - MOSCOW_COORDS.timezone * 60 * 60 * 1000);
+    year = utcDate.getUTCFullYear();
+    month = utcDate.getUTCMonth() + 1;
+    day = utcDate.getUTCDate();
+    hourUTC = utcDate.getUTCHours() + utcDate.getUTCMinutes() / 60;
+  } else {
+    hourUTC = hourUTC + minute / 60;
+  }
+
+  return { year, month, day, hour: hourUTC };
+}
+
+// Точный расчет фазы Луны и знака через SwissEph (для Москвы)
+export async function calculateMoonPhaseWithSwissEph(date: string, time?: string): Promise<MoonData> {
+  const SwissEphClass = await getSwissEph();
+  const swe = new SwissEphClass();
+  await swe.initSwissEph();
+
+  try {
+    const { year, month, day, hour } = convertToUTC(date, time);
+    const jd_ut = swe.julday(year, month, day, hour);
+
+    const moon = swe.calc_ut(jd_ut, swe.SE_MOON, swe.SEFLG_SWIEPH);
+    const sun = swe.calc_ut(jd_ut, swe.SE_SUN, swe.SEFLG_SWIEPH);
+
+    const moonLon = moon[0];
+    const sunLon = sun[0];
+
+    // Элонгация (разность долгот)
+    let elongation = moonLon - sunLon;
+    if (elongation < 0) elongation += 360;
+
+    // Освещенность по элонгации (0° — новолуние, 180° — полнолуние)
+    const illumination = Math.round(((1 + Math.cos((180 - elongation) * Math.PI / 180)) / 2) * 100);
+
+    let phase: string;
+    if (elongation >= 0 && elongation < 45) {
+      phase = "Новолуние";
+    } else if (elongation >= 45 && elongation < 90) {
+      phase = "Растущий серп";
+    } else if (elongation >= 90 && elongation < 135) {
+      phase = "Первая четверть";
+    } else if (elongation >= 135 && elongation < 180) {
+      phase = "Растущая луна";
+    } else if (elongation >= 180 && elongation < 225) {
+      phase = "Полнолуние";
+    } else if (elongation >= 225 && elongation < 270) {
+      phase = "Убывающая луна";
+    } else if (elongation >= 270 && elongation < 315) {
+      phase = "Последняя четверть";
+    } else {
+      phase = "Убывающий серп";
+    }
+
+    const sign = calculateZodiacSign(moonLon);
+
+    return {
+      phase,
+      phaseEmoji: getPhaseEmoji(phase),
+      sign,
+      signEmoji: getSignEmoji(sign),
+      illumination,
+    };
+  } finally {
+    swe.close();
+  }
 }
 
 export function clearMoonDataCache(): void {
